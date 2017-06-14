@@ -1,0 +1,246 @@
+<!--Code started by Michael Ortega for the LIG-->
+<!--Started on: April 19th, 2017-->
+
+<!DOCTYPE html>
+
+<html style="height:100%;">
+    <head>
+        <meta charset="UTF-8" />
+        <script src="/js/sakura-common.js"></script>
+        <script src="/js/sakura-operator.js"></script>
+        
+        <!-- operator-specific includes ... -->
+        <script src="/js/jquery-2.2.4.min.js"></script>
+        
+        <!-- ... done. -->
+    </head>
+    <body style="height:100%;">
+        <canvas id="container" style="height:100%; width: 100%;">
+            <script id="shader-vertex" type="x-shader/x-vertex">
+                
+            </script>
+            
+            <script id="shader-fragment" type="x-shader/x-fragment">
+                
+            </script>
+            
+            <script type="text/javascript">
+                ///////////////////////////////////////////////////////////////////
+                // GLOBALS
+                var gl              = null;      //main gl context
+                var object_buffer   = null;      //object to display
+                var object          = null;
+                var canvas          = document.getElementById("container");
+                var tempx           = 0;
+                var vertex_source = " \
+                    attribute vec3 aVertexPosition; \
+                    uniform mat4 PMatrix; \
+                    uniform mat4 MVMatrix; \
+                    \
+                    void main(void) { \
+                        gl_Position = PMatrix * MVMatrix * vec4(aVertexPosition, 1.0); \
+                    } \
+                "
+                var fragment_source = " \
+                    void main(void) { \
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
+                    } \
+                "
+                
+                ///////////////////////////////////////////////////////////////////
+                // INIT FUNCS
+                function init_webgL(canvas) { 
+                    
+                    try {
+                        // Essaye de récupérer le contexte standard. En cas d'échec, il teste l'appel experimental
+                        var _gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                    }
+                    catch(e) {
+                        console.log(e);
+                        return null;
+                    }
+                    
+                    // Si le contexte GL n'est pas récupéré, on l'indique à l'utilisateur.
+                    if (!_gl) {
+                        alert("Impossible d'initialiser le WebGL. Il est possible que votre navigateur ne supporte pas cette fonctionnalité.");
+                        return null;
+                    }
+                    console.log('WebGL initialized !!');
+                    
+                    
+                    canvas.onmousedown = function () {
+                        tempx += .2;
+                        requestAnimationFrame(display);
+                    };
+                    
+                    return _gl;
+                }
+                
+                
+                function get_and_compile_shader(type, source) {
+                    
+                    if (type == 'fragment')
+                        var shader = gl.createShader(gl.FRAGMENT_SHADER);
+                    else if (type == 'vertex')
+                        var shader = gl.createShader(gl.VERTEX_SHADER);
+                    gl.shaderSource(shader, source);
+                    gl.compileShader(shader);
+                    
+                    // Vérifie si la compilation s'est bien déroulée
+                    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { 
+                        console.log(name, "shader not ok!!", gl.getShaderInfoLog(shader));
+                        alert("Une erreur est survenue au cours de la compilation des shaders: " + gl.getShaderInfoLog(shader));
+                        return null;
+                    }
+                    return shader;
+                }
+                
+                
+                function init_shaders() {
+                    var shader_program = gl.createProgram();
+                    
+                    //shaders
+                    var fragment_shader = get_and_compile_shader('fragment', fragment_source);
+                    var vertex_shader   = get_and_compile_shader('vertex', vertex_source);
+                    
+                    //shader program
+                    gl.attachShader(shader_program, vertex_shader);
+                    gl.attachShader(shader_program, fragment_shader);
+                    gl.linkProgram(shader_program);
+                    
+                    if (!gl.getProgramParameter(shader_program, gl.LINK_STATUS)) {
+                        console.log("Impossible d'initialiser le shader.");
+                        return null;
+                    }
+                    gl.useProgram(shader_program);
+                    
+                    //shader program attribs
+                    var vertices = gl.getAttribLocation(shader_program, "aVertexPosition");
+                    gl.enableVertexAttribArray(vertices);
+                    
+                    return shader_program;
+                }
+                
+                
+                function initObject() {
+                    var squareVerticesBuffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+                    
+                    object = cube();
+                    
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object), gl.STATIC_DRAW);
+                    return squareVerticesBuffer;
+                }
+                
+                
+                ///////////////////////////////////////////////////////////////////
+                // COMPUTATION FUNCS
+                
+                function setMatrixUniforms(pm, mvm) {
+                    var PMatrix = gl.getUniformLocation(sh, "PMatrix");
+                    gl.uniformMatrix4fv(PMatrix, false, pm);
+                    
+                    var MVMatrix = gl.getUniformLocation(sh, "MVMatrix");
+                    gl.uniformMatrix4fv(MVMatrix, false, mvm);
+                }
+                
+                
+                function m_identity() {
+                    return [1,0,0,0,
+                            0,1,0,0,
+                            0,0,1,0,
+                            0,0,0,1];
+                }
+                
+                
+                function cube() {
+                    return [
+                    // Front face
+                    -1.0, -1.0,  1.0,
+                     1.0, -1.0,  1.0,
+                     1.0,  1.0,  1.0,
+                    -1.0,  1.0,  1.0,
+                    
+                    // Back face
+                    -1.0, -1.0, -1.0,
+                    -1.0,  1.0, -1.0,
+                     1.0,  1.0, -1.0,
+                     1.0, -1.0, -1.0,
+                    
+                    // Top face
+                    -1.0,  1.0, -1.0,
+                    -1.0,  1.0,  1.0,
+                     1.0,  1.0,  1.0,
+                     1.0,  1.0, -1.0,
+                    
+                    // Bottom face
+                    -1.0, -1.0, -1.0,
+                     1.0, -1.0, -1.0,
+                     1.0, -1.0,  1.0,
+                    -1.0, -1.0,  1.0,
+                    
+                    // Right face
+                     1.0, -1.0, -1.0,
+                     1.0,  1.0, -1.0,
+                     1.0,  1.0,  1.0,
+                     1.0, -1.0,  1.0,
+                    
+                    // Left face
+                    -1.0, -1.0, -1.0,
+                    -1.0, -1.0,  1.0,
+                    -1.0,  1.0,  1.0,
+                    -1.0,  1.0, -1.0
+                  ];
+                }
+                
+                
+                function perspective(fov, aspect, near, far) {
+                
+                    var d = 1/Math.tan(fov/2.)
+                    var mat = m_identity();
+                    
+                    mat[0] = d/aspect;
+                    mat[5] = d;
+                    mat[10] = (near + far)/(near - far);
+                    mat[14] = 2*near*far/(near-far);
+                    mat[11] = -1;
+                    mat[15] = 0;
+                    
+                    return mat;
+                }
+                
+                ///////////////////////////////////////////////////////////////////
+                // DISPLAY FUNCS
+                
+                function display() {
+                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, object_buffer);
+                    gl.vertexAttribPointer(object_buffer, 3, gl.FLOAT, false, 0, 0);
+                    var pm = perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
+                    var mv = m_identity();
+                    mv[14] = -3;
+                    mv[12] = tempx;
+                    setMatrixUniforms(pm, mv);
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, object.length/3);
+                }
+                
+                ///////////////////////////////////////////////////////////////////
+                // MAIN
+                
+                gl              = init_webgL(canvas);
+                sh              = init_shaders();
+                object_buffer   = initObject();
+                
+                if (gl) {
+                    gl.clearColor(0.5, 0.5, 1.0, 1.0);                      // Met la couleur d'effacement au noir et complétement opaque
+                    gl.enable(gl.DEPTH_TEST);                               // Active le test de profondeur
+                    gl.depthFunc(gl.LEQUAL);                                // Les objets proches cachent les objets lointains
+                    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Efface les couleurs et le buffer de profondeur.
+                    
+                    requestAnimationFrame(display);
+                }
+            </script>
+        </canvas>
+    </body>
+</html>
+
