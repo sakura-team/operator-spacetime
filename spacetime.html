@@ -16,14 +16,7 @@
     </head>
     <body style="height:100%;">
         <canvas id="container" style="height:100%; width: 100%;">
-            <script id="shader-vertex" type="x-shader/x-vertex">
-                
-            </script>
-            
-            <script id="shader-fragment" type="x-shader/x-fragment">
-                
-            </script>
-            
+            <script src="libs/shaders.js"></script>
             <script type="text/javascript">
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
@@ -32,20 +25,6 @@
                 var object          = null;
                 var canvas          = document.getElementById("container");
                 var tempx           = 0;
-                var vertex_source = " \
-                    attribute vec3 aVertexPosition; \
-                    uniform mat4 PMatrix; \
-                    uniform mat4 MVMatrix; \
-                    \
-                    void main(void) { \
-                        gl_Position = PMatrix * MVMatrix * vec4(aVertexPosition, 1.0); \
-                    } \
-                "
-                var fragment_source = " \
-                    void main(void) { \
-                        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
-                    } \
-                "
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -74,51 +53,6 @@
                     };
                     
                     return _gl;
-                }
-                
-                
-                function get_and_compile_shader(type, source) {
-                    
-                    if (type == 'fragment')
-                        var shader = gl.createShader(gl.FRAGMENT_SHADER);
-                    else if (type == 'vertex')
-                        var shader = gl.createShader(gl.VERTEX_SHADER);
-                    gl.shaderSource(shader, source);
-                    gl.compileShader(shader);
-                    
-                    // Vérifie si la compilation s'est bien déroulée
-                    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { 
-                        console.log(name, "shader not ok!!", gl.getShaderInfoLog(shader));
-                        alert("Une erreur est survenue au cours de la compilation des shaders: " + gl.getShaderInfoLog(shader));
-                        return null;
-                    }
-                    return shader;
-                }
-                
-                
-                function init_shaders() {
-                    var shader_program = gl.createProgram();
-                    
-                    //shaders
-                    var fragment_shader = get_and_compile_shader('fragment', fragment_source);
-                    var vertex_shader   = get_and_compile_shader('vertex', vertex_source);
-                    
-                    //shader program
-                    gl.attachShader(shader_program, vertex_shader);
-                    gl.attachShader(shader_program, fragment_shader);
-                    gl.linkProgram(shader_program);
-                    
-                    if (!gl.getProgramParameter(shader_program, gl.LINK_STATUS)) {
-                        console.log("Impossible d'initialiser le shader.");
-                        return null;
-                    }
-                    gl.useProgram(shader_program);
-                    
-                    //shader program attribs
-                    var vertices = gl.getAttribLocation(shader_program, "aVertexPosition");
-                    gl.enableVertexAttribArray(vertices);
-                    
-                    return shader_program;
                 }
                 
                 
@@ -228,7 +162,10 @@
                 // MAIN
                 
                 gl              = init_webgL(canvas);
-                sh              = init_shaders();
+                sh              = init_shaders(gl);
+                var vertices = gl.getAttribLocation(sh, "aVertexPosition");
+                gl.enableVertexAttribArray(vertices);
+                
                 object_buffer   = initObject();
                 
                 if (gl) {
