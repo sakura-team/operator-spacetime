@@ -37,6 +37,7 @@
                 var mode            = "idle";
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
                 var paths           = [];
+                var rot_angle       = [0, 0];
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -78,6 +79,8 @@
                         if (mode == "rotation") {
                             mouse.dx = event.clientX - mouse.x;
                             mouse.dy = event.clientY - mouse.y;
+                            mouse.x = event.clientX;
+                            mouse.y = event.clientY;
                             requestAnimationFrame(display);
                         }
                     }
@@ -161,11 +164,11 @@
                     gl.vertexAttribPointer(object_n_loc, 3, gl.FLOAT, false, 0, 0);
                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
                     
-                    angleX = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
-                    angleY = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
+                    rot_angle[0] += 2*Math.PI*mouse.dx/parseFloat(canvas.width);
+                    rot_angle[1] += 2*Math.PI*mouse.dy/parseFloat(canvas.height);
                     
-                    var qx = m_quaternion(angleX, [0, 1, 0]);
-                    var qy = m_quaternion(angleY, [1, 0, 0]);
+                    var qx = m_quaternion(rot_angle[0], [0, 1, 0]);
+                    var qy = m_quaternion(rot_angle[1], [1, 0, 0]);
                     
                     camera.pos = rotatePointWithPivot(camera.init_pos, qx, camera.vp);
                     camera.pos = rotatePointWithPivot(camera.pos, qy, camera.vp);
