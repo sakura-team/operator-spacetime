@@ -38,6 +38,10 @@
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
                 var paths           = [];
                 var rot_angle       = [0, 0];
+                var paths_p     = null;
+                var paths_p_loc     = null;
+                var paths_p_buf     = null;
+                
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -155,19 +159,7 @@
                     
                     
                     /////////////////////////////////////////////////
-                    // FLOOR
-                    gl.useProgram(floor_sh);
-                    gl.enableVertexAttribArray(floor_p_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
-                    gl.vertexAttribPointer(floor_p_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
-                    
-                    
-                    gl.enableVertexAttribArray(floor_n_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
-                    gl.vertexAttribPointer(floor_n_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
-                    
+                    // CAMERA
                     rot_angle[0] += 2*Math.PI*mouse.dx/parseFloat(canvas.width);
                     rot_angle[1] += 2*Math.PI*mouse.dy/parseFloat(canvas.height);
                     
@@ -186,18 +178,46 @@
                     
                     camera.up = m_vector(camera.pos, up_p)
                     
+                    
+                    
+                    
+                    /////////////////////////////////////////////////
+                    // FLOOR
+                    gl.useProgram(floor_sh);
+                    gl.enableVertexAttribArray(floor_p_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
+                    gl.vertexAttribPointer(floor_p_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
+                    
+                    gl.enableVertexAttribArray(floor_n_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
+                    gl.vertexAttribPointer(floor_n_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
+                    
+                    
                     m_setMatrixUniforms(floor_sh,
                                         camera.projection,
                                         m_lookAt(camera.pos, [0,0,0], camera.up)  );
                     
-                    gl.drawArrays(gl.TRIANGLES, 0, 6);
+                    gl.drawArrays(gl.LINE_STRIP, 0, 6);
                     
                     
                     /////////////////////////////////////////////////
                     // PATHS
-                    gl.useProgram(paths_sh);
-                    
-                    
+                    if (paths.length) {
+                        gl.useProgram(paths_sh);
+                        
+                        gl.enableVertexAttribArray(paths_p_loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, paths_p_buf);
+                        gl.vertexAttribPointer(paths_p_loc, 3, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_p), gl.DYNAMIC_DRAW);
+                        
+                        
+                        m_setMatrixUniforms(paths_sh,
+                                            camera.projection,
+                                            m_lookAt(camera.pos, [0,0,0], camera.up)  );
+                        gl.drawArrays(gl.LINE_STRIP, 0, paths_p.length/3);
+                    }
                 }
                 
                 ///////////////////////////////////////////////////////////////////
@@ -225,7 +245,6 @@
                 
                 // PATHS SHADER
                 paths_sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
-                
                 
                 if (gl) {
                     gl.clearColor(0.5, 0.5, 1.0, 1.0);                      // Met la couleur d'effacement au noir et complétement opaque
