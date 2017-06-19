@@ -7,22 +7,30 @@ var floor_vertex_source = " \
     uniform mat4 PMatrix; \
     uniform mat4 MVMatrix; \
     \
-    varying vec3 v_normal; \
+    varying float v_light; \
+    \
+    vec3 light_pos = vec3(0, 1000, 1000);\
+    \
     void main(void) { \
-        gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
-        v_normal = normal; \
+        vec4 p = MVMatrix * vec4(position, 1.0); \
+        vec4 p_normal = MVMatrix * vec4(position+normal, 1.0); \
+        vec3 v_normal = (p_normal - p).xyz; \
+        vec4 l_pos = vec4(light_pos, 1.0); \
+        \
+        vec3 light_inv_ray = normalize(l_pos.xyz - gl_Position.xyz);\
+        v_light = max(dot(v_normal, light_inv_ray), 0.0); \
+        \
+        gl_Position = PMatrix * p; \
     } \
 "
 var floor_fragment_source = " \
     precision highp float;\
      \
-    varying vec3 v_normal; \
+    varying float v_light; \
     \
     void main(void) { \
-        vec3 light_inv_ray = normalize(vec3(-.2,.5,1));\
-        float light = dot(v_normal, light_inv_ray); \
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
-        gl_FragColor.rgb *= light; \
+        gl_FragColor.rgb *= v_light; \
     } \
 "
 
