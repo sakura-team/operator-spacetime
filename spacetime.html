@@ -15,10 +15,12 @@
         <!-- ... done. -->
     </head>
     <body style="height:100%;">
+        <input type="file" id="files" name="files" onchange="gps_read(event)" multiple />
         <canvas id="container" style="height:100%; width: 100%;">
             <script src="libs/shaders.js"></script>
             <script src="libs/matrix.js"></script>
             <script src="libs/camera.js"></script>
+            <script src="libs/gps.js"></script>
             <script type="text/javascript">
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
@@ -34,6 +36,7 @@
                 var camera          = new Camera(pos = [0, 0, 10]);
                 var mode            = "idle";
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
+                var paths           = [];
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -88,15 +91,18 @@
                 // COMPUTATION FUNCS
                 
                 
-                function cube_p() {
+                function floor_p() {
                     return [
                     // Front face
-                    -1.0,  1.0,  1.0,
-                    -1.0, -1.0,  1.0,
-                     1.0,  1.0,  1.0,
-                     1.0, -1.0,  1.0,
+                    -1.0,  0.0,  1.0,
+                    1.0, 0.0,  1.0,
+                    1.0,  0.0,  -1.0,
                     
-                    // Right face
+                    -1.0, 0.0,  1.0,
+                    1.0,  0.0,  -1.0,
+                    -1.0,  0.0,  -1.0
+                     
+                    /*// Right face
                      1.0,  1.0, -1.0,
                      1.0, -1.0, -1.0,
                      
@@ -106,26 +112,22 @@
                      
                     // left face
                     -1.0,  1.0, 1.0,
-                    -1.0, -1.0, 1.0,
-                    
-                    // Top face
-                    -1.0,  1.0, 1.0,
-                    -1.0,  1.0, 1.0,
-                    1.0,  1.0, 1.0,
-                    -1.0,  1.0, -1.0,
-                    1.0,  1.0, -1.0
-                    
+                    -1.0, -1.0, 1.0
+                    */
                   ];
                 }
                 
-                function cube_n() {
+                function floor_n() {
                     return [
                     // Front face
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
+                    0.0, 1.0,  0.0,
+                    0.0, 1.0,  0.0,
+                    0.0, 1.0,  0.0,
+                    0.0, 1.0,  0.0,
+                    0.0, 1.0,  0.0,
+                    0.0, 1.0,  0.0
                     
+                    /*
                     // Right face
                     1.0, 0.0,  0.0,
                     1.0, 0.0,  0.0,
@@ -137,13 +139,7 @@
                     // Left face
                     -1.0, 0.0,  0.0,
                     -1.0, 0.0,  0.0,
-                    
-                    // Top face
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 0.0
+                    */
                     ]
                 }
                 
@@ -185,7 +181,7 @@
                     m_setMatrixUniforms(camera.projection,
                                         m_lookAt(camera.pos, [0,0,0], camera.up)  );
                     
-                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 14);//object_p.length/3);
+                    gl.drawArrays(gl.TRIANGLES, 0, 6);
                 }
                 
                 ///////////////////////////////////////////////////////////////////
@@ -194,16 +190,17 @@
                 gl                      = init_webgL(canvas);
                 sh                      = init_shaders(gl);
                 
+                
                 object_n_loc            = gl.getAttribLocation(sh, "normal");
                 gl.enableVertexAttribArray(object_n_loc);
-                object_n                = cube_n();
+                object_n                = floor_n();
                 object_n_buf            = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, object_n_buf);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
                 
                 object_p_loc   = gl.getAttribLocation(sh, "position");
                 gl.enableVertexAttribArray(object_p_loc);
-                object_p                = cube_p();
+                object_p                = floor_p();
                 object_p_buf            = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, object_p_buf);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_p), gl.DYNAMIC_DRAW);
