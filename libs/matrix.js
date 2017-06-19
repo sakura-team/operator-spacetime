@@ -27,7 +27,7 @@ function m_perspective(fov, aspect, near, far) {
 }
 
 
-function m_setMatrixUniforms(pm, mvm) {
+function m_setMatrixUniforms(sh, pm, mvm) {
     var PMatrix = gl.getUniformLocation(sh, "PMatrix");
     gl.uniformMatrix4fv(PMatrix, false, pm);
     

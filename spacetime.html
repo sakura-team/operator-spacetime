@@ -25,12 +25,12 @@
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
                 var gl              = null;     //main gl context
-                var object_p        = null;     //vertices
-                var object_p_buf    = null;
-                var object_p_loc    = null;
-                var object_n        = null;     //normals
-                var object_n_buf    = null;
-                var object_n_loc    = null;
+                var floor_p         = null;     //vertices
+                var floor_p_buf     = null;
+                var floor_p_loc     = null;
+                var floor_n         = null;     //normals
+                var floor_n_buf     = null;
+                var floor_n_loc     = null;
                 var canvas          = document.getElementById("container");
                 var tempx           = 0;
                 var camera          = new Camera(pos = [0, 0, 10]);
@@ -94,7 +94,7 @@
                 // COMPUTATION FUNCS
                 
                 
-                function floor_p() {
+                function floor_pos() {
                     return [
                     // Front face
                     -1.0,  0.0,  1.0,
@@ -120,7 +120,7 @@
                   ];
                 }
                 
-                function floor_n() {
+                function floor_nor() {
                     return [
                     // Front face
                     0.0, 1.0,  0.0,
@@ -153,16 +153,20 @@
                 function display() {
                     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
                     
-                    gl.enableVertexAttribArray(object_p_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, object_p_buf);
-                    gl.vertexAttribPointer(object_p_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_p), gl.DYNAMIC_DRAW);
+                    
+                    /////////////////////////////////////////////////
+                    // FLOOR
+                    gl.useProgram(floor_sh);
+                    gl.enableVertexAttribArray(floor_p_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
+                    gl.vertexAttribPointer(floor_p_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
                     
                     
-                    gl.enableVertexAttribArray(object_n_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, object_n_buf);
-                    gl.vertexAttribPointer(object_n_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
+                    gl.enableVertexAttribArray(floor_n_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
+                    gl.vertexAttribPointer(floor_n_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
                     
                     rot_angle[0] += 2*Math.PI*mouse.dx/parseFloat(canvas.width);
                     rot_angle[1] += 2*Math.PI*mouse.dy/parseFloat(canvas.height);
@@ -179,34 +183,48 @@
                                 
                     up_p = rotatePointWithPivot(up_p, qx, camera.vp);
                     up_p = rotatePointWithPivot(up_p, qy, camera.vp);
+                    
                     camera.up = m_vector(camera.pos, up_p)
                     
-                    m_setMatrixUniforms(camera.projection,
+                    m_setMatrixUniforms(floor_sh,
+                                        camera.projection,
                                         m_lookAt(camera.pos, [0,0,0], camera.up)  );
                     
                     gl.drawArrays(gl.TRIANGLES, 0, 6);
+                    
+                    
+                    /////////////////////////////////////////////////
+                    // PATHS
+                    gl.useProgram(paths_sh);
+                    
+                    
                 }
                 
                 ///////////////////////////////////////////////////////////////////
                 // MAIN
                 
                 gl                      = init_webgL(canvas);
-                sh                      = init_shaders(gl);
+                
+                // FLOOR SHADER
+                floor_sh                = init_shader(gl, floor_fragment_source, floor_vertex_source);
+                
+                floor_n_loc            = gl.getAttribLocation(floor_sh, "normal");
+                gl.enableVertexAttribArray(floor_n_loc);
+                floor_n                = floor_nor();
+                floor_n_buf            = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
+                
+                floor_p_loc   = gl.getAttribLocation(floor_sh, "position");
+                gl.enableVertexAttribArray(floor_p_loc);
+                floor_p                = floor_pos();
+                floor_p_buf            = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
                 
                 
-                object_n_loc            = gl.getAttribLocation(sh, "normal");
-                gl.enableVertexAttribArray(object_n_loc);
-                object_n                = floor_n();
-                object_n_buf            = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, object_n_buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
-                
-                object_p_loc   = gl.getAttribLocation(sh, "position");
-                gl.enableVertexAttribArray(object_p_loc);
-                object_p                = floor_p();
-                object_p_buf            = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, object_p_buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_p), gl.DYNAMIC_DRAW);
+                // PATHS SHADER
+                paths_sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
                 
                 
                 if (gl) {

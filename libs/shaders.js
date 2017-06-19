@@ -1,7 +1,7 @@
 <!--Code started by Michael Ortega for the LIG-->
 <!--Started on: June 15th, 2017-->
 
-var vertex_source = " \
+var floor_vertex_source = " \
     attribute vec3 position; \
     attribute vec3 normal; \
     uniform mat4 PMatrix; \
@@ -13,7 +13,7 @@ var vertex_source = " \
         v_normal = normal; \
     } \
 "
-var fragment_source = " \
+var floor_fragment_source = " \
     precision highp float;\
      \
     varying vec3 v_normal; \
@@ -23,6 +23,24 @@ var fragment_source = " \
         float light = dot(v_normal, light_inv_ray); \
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
         gl_FragColor.rgb *= light; \
+    } \
+"
+
+var paths_vertex_source = " \
+    attribute vec3 position; \
+    uniform mat4 PMatrix; \
+    uniform mat4 MVMatrix; \
+    \
+    void main(void) { \
+        gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
+    } \
+"
+
+var paths_fragment_source = " \
+    precision highp float;\
+     \
+    void main(void) { \
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \
     } \
 "
 
@@ -45,12 +63,12 @@ function get_and_compile_shader(_gl, type, source) {
 }
 
 
-function init_shaders(_gl) {
+function init_shader(_gl, f_source, v_source) {
     var shader_program = _gl.createProgram();
     
     //shaders
-    var fragment_shader = get_and_compile_shader(_gl, 'fragment', fragment_source);
-    var vertex_shader   = get_and_compile_shader(_gl, 'vertex', vertex_source);
+    var fragment_shader = get_and_compile_shader(_gl, 'fragment', f_source);
+    var vertex_shader   = get_and_compile_shader(_gl, 'vertex', v_source);
     
     //shader program
     _gl.attachShader(shader_program, vertex_shader);
