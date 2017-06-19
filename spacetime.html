@@ -17,22 +17,34 @@
     <body style="height:100%;">
         <canvas id="container" style="height:100%; width: 100%;">
             <script src="libs/shaders.js"></script>
+            <script src="libs/matrix.js"></script>
+            <script src="libs/camera.js"></script>
             <script type="text/javascript">
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
-                var gl              = null;      //main gl context
-                var object_buffer   = null;      //object to display
-                var object          = null;
+                var gl              = null;     //main gl context
+                var object_p        = null;     //vertices
+                var object_p_buf    = null;
+                var object_p_loc    = null;
+                var object_n        = null;     //normals
+                var object_n_buf    = null;
+                var object_n_loc    = null;
                 var canvas          = document.getElementById("container");
                 var tempx           = 0;
+                var camera          = new Camera(pos = [0, 0, 10]);
+                var mode            = "idle";
+                var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
-                function init_webgL(canvas) { 
+                function init_webgL(_canvas) { 
+                    
+                    _canvas.width = _canvas.clientWidth;
+                    _canvas.height = _canvas.clientHeight;
                     
                     try {
                         // Essaye de récupérer le contexte standard. En cas d'échec, il teste l'appel experimental
-                        var _gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                        var _gl = _canvas.getContext("webgl") || _canvas.getContext("experimental-webgl");
                     }
                     catch(e) {
                         console.log(e);
@@ -47,126 +59,155 @@
                     console.log('WebGL initialized !!');
                     
                     
-                    canvas.onmousedown = function () {
-                        tempx += .2;
+                    canvas.onmousedown = function (event) {
+                        mode = "rotation"
+                        mouse.x = event.clientX;
+                        mouse.y = event.clientY;
                         requestAnimationFrame(display);
                     };
                     
+                    canvas.onmouseup = function () {
+                        mode = "idle"
+                        requestAnimationFrame(display);
+                    };
+                    
+                    canvas.onmousemove = function (event) {
+                        if (mode == "rotation") {
+                            mouse.dx = event.clientX - mouse.x;
+                            mouse.dy = event.clientY - mouse.y;
+                            requestAnimationFrame(display);
+                        }
+                    }
+                    
+                    camera.projection = m_perspective(45, _gl.drawingBufferWidth/_gl.drawingBufferHeight, 0.01, 1000);
                     return _gl;
-                }
-                
-                
-                function initObject() {
-                    var squareVerticesBuffer = gl.createBuffer();
-                    gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
-                    
-                    object = cube();
-                    
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object), gl.STATIC_DRAW);
-                    return squareVerticesBuffer;
                 }
                 
                 
                 ///////////////////////////////////////////////////////////////////
                 // COMPUTATION FUNCS
                 
-                function setMatrixUniforms(pm, mvm) {
-                    var PMatrix = gl.getUniformLocation(sh, "PMatrix");
-                    gl.uniformMatrix4fv(PMatrix, false, pm);
-                    
-                    var MVMatrix = gl.getUniformLocation(sh, "MVMatrix");
-                    gl.uniformMatrix4fv(MVMatrix, false, mvm);
-                }
                 
-                
-                function m_identity() {
-                    return [1,0,0,0,
-                            0,1,0,0,
-                            0,0,1,0,
-                            0,0,0,1];
-                }
-                
-                
-                function cube() {
+                function cube_p() {
                     return [
                     // Front face
-                    -1.0, -1.0,  1.0,
-                     1.0, -1.0,  1.0,
-                     1.0,  1.0,  1.0,
                     -1.0,  1.0,  1.0,
-                    
-                    // Back face
-                    -1.0, -1.0, -1.0,
-                    -1.0,  1.0, -1.0,
-                     1.0,  1.0, -1.0,
-                     1.0, -1.0, -1.0,
-                    
-                    // Top face
-                    -1.0,  1.0, -1.0,
-                    -1.0,  1.0,  1.0,
-                     1.0,  1.0,  1.0,
-                     1.0,  1.0, -1.0,
-                    
-                    // Bottom face
-                    -1.0, -1.0, -1.0,
-                     1.0, -1.0, -1.0,
-                     1.0, -1.0,  1.0,
                     -1.0, -1.0,  1.0,
+                     1.0,  1.0,  1.0,
+                     1.0, -1.0,  1.0,
                     
                     // Right face
-                     1.0, -1.0, -1.0,
                      1.0,  1.0, -1.0,
-                     1.0,  1.0,  1.0,
-                     1.0, -1.0,  1.0,
-                    
-                    // Left face
+                     1.0, -1.0, -1.0,
+                     
+                    // Back face
+                    -1.0,  1.0, -1.0,
                     -1.0, -1.0, -1.0,
-                    -1.0, -1.0,  1.0,
-                    -1.0,  1.0,  1.0,
-                    -1.0,  1.0, -1.0
+                     
+                    // left face
+                    -1.0,  1.0, 1.0,
+                    -1.0, -1.0, 1.0,
+                    
+                    // Top face
+                    -1.0,  1.0, 1.0,
+                    -1.0,  1.0, 1.0,
+                    1.0,  1.0, 1.0,
+                    -1.0,  1.0, -1.0,
+                    1.0,  1.0, -1.0
+                    
                   ];
                 }
                 
-                
-                function perspective(fov, aspect, near, far) {
-                
-                    var d = 1/Math.tan(fov/2.)
-                    var mat = m_identity();
+                function cube_n() {
+                    return [
+                    // Front face
+                    0.0, 0.0,  1.0,
+                    0.0, 0.0,  1.0,
+                    0.0, 0.0,  1.0,
+                    0.0, 0.0,  1.0,
                     
-                    mat[0] = d/aspect;
-                    mat[5] = d;
-                    mat[10] = (near + far)/(near - far);
-                    mat[14] = 2*near*far/(near-far);
-                    mat[11] = -1;
-                    mat[15] = 0;
+                    // Right face
+                    1.0, 0.0,  0.0,
+                    1.0, 0.0,  0.0,
                     
-                    return mat;
+                    // Back face
+                    0.0, 0.0,  -1.0,
+                    0.0, 0.0,  -1.0,
+                    
+                    // Left face
+                    -1.0, 0.0,  0.0,
+                    -1.0, 0.0,  0.0,
+                    
+                    // Top face
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0
+                    ]
                 }
+                
                 
                 ///////////////////////////////////////////////////////////////////
                 // DISPLAY FUNCS
                 
                 function display() {
                     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, object_buffer);
-                    gl.vertexAttribPointer(object_buffer, 3, gl.FLOAT, false, 0, 0);
-                    var pm = perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
-                    var mv = m_identity();
-                    mv[14] = -3;
-                    mv[12] = tempx;
-                    setMatrixUniforms(pm, mv);
-                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, object.length/3);
+                    
+                    gl.enableVertexAttribArray(object_p_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, object_p_buf);
+                    gl.vertexAttribPointer(object_p_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_p), gl.DYNAMIC_DRAW);
+                    
+                    
+                    gl.enableVertexAttribArray(object_n_loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, object_n_buf);
+                    gl.vertexAttribPointer(object_n_loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
+                    
+                    angleX = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
+                    angleY = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
+                    
+                    var qx = m_quaternion(angleX, [0, 1, 0]);
+                    var qy = m_quaternion(angleY, [1, 0, 0]);
+                    
+                    camera.pos = rotatePointWithPivot(camera.init_pos, qx, camera.vp);
+                    camera.pos = rotatePointWithPivot(camera.pos, qy, camera.vp);
+                    
+                    up_p = [    camera.init_pos[0] + camera.init_up[0],
+                                camera.init_pos[1] + camera.init_up[1],
+                                camera.init_pos[2] + camera.init_up[2]  ];
+                                
+                    up_p = rotatePointWithPivot(up_p, qx, camera.vp);
+                    up_p = rotatePointWithPivot(up_p, qy, camera.vp);
+                    camera.up = m_vector(camera.pos, up_p)
+                    
+                    m_setMatrixUniforms(camera.projection,
+                                        m_lookAt(camera.pos, [0,0,0], camera.up)  );
+                    
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 14);//object_p.length/3);
                 }
                 
                 ///////////////////////////////////////////////////////////////////
                 // MAIN
                 
-                gl              = init_webgL(canvas);
-                sh              = init_shaders(gl);
-                var vertices = gl.getAttribLocation(sh, "aVertexPosition");
-                gl.enableVertexAttribArray(vertices);
+                gl                      = init_webgL(canvas);
+                sh                      = init_shaders(gl);
                 
-                object_buffer   = initObject();
+                object_n_loc            = gl.getAttribLocation(sh, "normal");
+                gl.enableVertexAttribArray(object_n_loc);
+                object_n                = cube_n();
+                object_n_buf            = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, object_n_buf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_n), gl.DYNAMIC_DRAW);
+                
+                object_p_loc   = gl.getAttribLocation(sh, "position");
+                gl.enableVertexAttribArray(object_p_loc);
+                object_p                = cube_p();
+                object_p_buf            = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, object_p_buf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object_p), gl.DYNAMIC_DRAW);
+                
                 
                 if (gl) {
                     gl.clearColor(0.5, 0.5, 1.0, 1.0);                      // Met la couleur d'effacement au noir et complétement opaque

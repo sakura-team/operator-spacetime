@@ -1,18 +1,28 @@
 <!--Code started by Michael Ortega for the LIG-->
-<!--Started on: June 27th, 2017-->
+<!--Started on: June 15th, 2017-->
 
 var vertex_source = " \
-    attribute vec3 aVertexPosition; \
+    attribute vec3 position; \
+    attribute vec3 normal; \
     uniform mat4 PMatrix; \
     uniform mat4 MVMatrix; \
     \
+    varying vec3 v_normal; \
     void main(void) { \
-        gl_Position = PMatrix * MVMatrix * vec4(aVertexPosition, 1.0); \
+        gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
+        v_normal = normal; \
     } \
 "
 var fragment_source = " \
+    precision highp float;\
+     \
+    varying vec3 v_normal; \
+    \
     void main(void) { \
+        vec3 light_inv_ray = normalize(vec3(-.2,.5,1));\
+        float light = dot(v_normal, light_inv_ray); \
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
+        gl_FragColor.rgb *= light; \
     } \
 "
 
