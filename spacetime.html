@@ -210,25 +210,22 @@
                     
                     /////////////////////////////////////////////////
                     // CAMERA
-                    rot_angle[0] += 2*Math.PI*mouse.dx/parseFloat(canvas.width);
-                    rot_angle[1] += 2*Math.PI*mouse.dy/parseFloat(canvas.height);
+                    rot_angle[0] = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
+                    rot_angle[1] = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
                     
-                    var qx = m_quaternion(rot_angle[0], [0, 1, 0]);
-                    var qy = m_quaternion(rot_angle[1], [1, 0, 0]);
                     
-                    camera.pos = rotatePointWithPivot(camera.init_pos, qx, camera.vp);
+                    var cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
+                    var right   = m_normalize(m_cross(cam_dir, camera.up));
+                    var qy    = m_quaternion(rot_angle[1], right);
                     camera.pos = rotatePointWithPivot(camera.pos, qy, camera.vp);
                     
-                    up_p = [    camera.init_pos[0] + camera.init_up[0],
-                                camera.init_pos[1] + camera.init_up[1],
-                                camera.init_pos[2] + camera.init_up[2]  ];
-                                
-                    up_p = rotatePointWithPivot(up_p, qx, camera.vp);
-                    up_p = rotatePointWithPivot(up_p, qy, camera.vp);
                     
-                    camera.up = m_vector(camera.pos, up_p)
+                    var qx = m_quaternion(rot_angle[0], [0, 1, 0]);
+                    camera.pos = rotatePointWithPivot(camera.pos, qx, camera.vp);
                     
-                    
+                    cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
+                    right   = m_normalize(m_cross(cam_dir, [0, 1, 0]));
+                    camera.up = m_normalize(m_cross(right, cam_dir));
                     
                     
                     /////////////////////////////////////////////////
