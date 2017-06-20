@@ -21,6 +21,7 @@
             <script src="libs/matrix.js"></script>
             <script src="libs/camera.js"></script>
             <script src="libs/gps.js"></script>
+            <script src="libs/objects.js"></script>
             <script type="text/javascript">
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
@@ -120,107 +121,7 @@
                 ///////////////////////////////////////////////////////////////////
                 // COMPUTATION FUNCS
                 
-                function floor_pos(e) {
-                    return [
-                    // top face
-                    -e,  0.0,  e,
-                    e, 0.0,  e,
-                    e,  0.0,  -e,
-                    -e, 0.0,  e,
-                    e,  0.0,  -e,
-                    -e,  0.0,  -e,
-                    
-                    //front face
-                    -e, 0.0,  e,
-                    -e,  -0.1,  e,
-                    e,  0.0,  e,
-                    -e,  -0.1,  e,
-                    e, -0.1,  e,
-                    e,  0.0,  e,
-                     
-                    //bottom face
-                    -e,  -.1,  e,
-                    e,  -.1,  -e,
-                    e, -.1,  e,
-                    -e, -.1,  e,
-                    -e,  -.1,  -e,
-                    e,  -.1,  -e,
-                    
-                    // right face
-                    e, 0.0,  e,
-                    e, -0.1,  e,
-                    e, 0.0,  -e,
-                    
-                    e, -0.1,  e,
-                    e, -0.1,  -e,
-                    e, 0.0,  -e,
-                    
-                    // left face
-                    -e, 0.0,  e,
-                    -e, 0.0,  -e,
-                    -e, -0.1,  e,
-                    
-                    -e, -0.1,  e,
-                    -e, 0.0,  -e,
-                    -e, -0.1,  -e,
-                    
-                    //back face
-                    -e, 0.0,  -e,
-                    e,  0.0,  -e,
-                    -e,  -0.1,  -e,
-                    -e,  -0.1,  -e,
-                    e,  0.0,  -e,
-                    e, -0.1,  -e
-                    
-                  ];
-                }
                 
-                function floor_nor() {
-                    return [
-                    // Front face
-                    0.0, 1.0,  0.0,
-                    0.0, 1.0,  0.0,
-                    0.0, 1.0,  0.0,
-                    0.0, 1.0,  0.0,
-                    0.0, 1.0,  0.0,
-                    0.0, 1.0,  0.0,
-                    
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    0.0, 0.0,  1.0,
-                    
-                    0.0, -1.0,  0.0,
-                    0.0, -1.0,  0.0,
-                    0.0, -1.0,  0.0,
-                    0.0, -1.0,  0.0,
-                    0.0, -1.0,  0.0,
-                    0.0, -1.0,  0.0,
-                    
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    1.0, 0.0, 0.0,
-                    
-                    -1.0, 0.0, 0.0,
-                    -1.0, 0.0, 0.0,
-                    -1.0, 0.0, 0.0,
-                    -1.0, 0.0, 0.0,
-                    -1.0, 0.0, 0.0,
-                    -1.0, 0.0, 0.0,
-                    
-                    0.0, 0.0,  -1.0,
-                    0.0, 0.0,  -1.0,
-                    0.0, 0.0,  -1.0,
-                    0.0, 0.0,  -1.0,
-                    0.0, 0.0,  -1.0,
-                    0.0, 0.0,  -1.0
-                    ]
-                }
                 
                 
                 ///////////////////////////////////////////////////////////////////
@@ -298,14 +199,14 @@
                 
                 floor_n_loc            = gl.getAttribLocation(floor_sh, "normal");
                 gl.enableVertexAttribArray(floor_n_loc);
-                floor_n                = floor_nor();
+                floor_n                = o_floor_n();
                 floor_n_buf            = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
                 
                 floor_p_loc   = gl.getAttribLocation(floor_sh, "position");
                 gl.enableVertexAttribArray(floor_p_loc);
-                floor_p                = floor_pos(2.0);
+                floor_p                = o_floor_p(2.0, .05, 2.0);
                 floor_p_buf            = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
                 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
