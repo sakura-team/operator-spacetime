@@ -23,6 +23,7 @@ function getXYpos(relativeNullPoint, p) {
 function gps_read(event) {
     
     paths = [];
+    var null_point = {'latitude': 0, 'longitude': 0, 'elevation': 0};
     
     for (var i = 0; i< event.target.files.length; i++) {
         
@@ -35,7 +36,7 @@ function gps_read(event) {
             var mins    = [1000000, 1000000, 1000000];
             var maxes   = [-1000000, -1000000, -1000000];
             
-            var null_point = {'latitude': 0, 'longitude': 0, 'elevation': 0};
+            
             for (var i =0 ; i<lines.length; i++) {
                 if (lines[i].indexOf('<trkpt') != -1) {
                     
@@ -50,7 +51,7 @@ function gps_read(event) {
                     tab = lines[i+1].split('<ele>');
                     var ele = parseFloat(tab[1].split('</ele>')[0]);
                     
-                    if (vals.length == 0) {
+                    if (vals.length == 0 && paths.length == 0) {
                         null_point = {'latitude': lat, 'longitude': lon, 'elevation': ele};
                     }
                     res = getXYpos(null_point, {'latitude': lat, 'longitude':lon});
@@ -62,14 +63,14 @@ function gps_read(event) {
                     var time = Date.parse(tab[1].split('</time>')[0]);
                     
                     //MIN MAX
-                    if (lon < mins[0])  mins[0] = lon;
-                    else if (lon > maxes[0])  maxes[0] = lon;
+                    mins[0] = Math.min(lon, mins[0]);
+                    maxes[0]= Math.max(lon, maxes[0]);
                     
-                    if (lat < mins[1])  mins[1] = lat;
-                    else if (lat > maxes[1])  maxes[1] = lat;
+                    mins[1] = Math.min(lat, mins[1]);
+                    maxes[1]= Math.max(lat, maxes[1]);
                     
-                    if (ele < mins[2])  mins[2] = ele;
-                    else if (ele > maxes[2])  maxes[2] = ele;
+                    mins[2] = Math.min(ele, mins[2]);
+                    maxes[2]= Math.max(ele, maxes[2]);
                     
                     // PUSH
                     vals.push({'time': time, 'pos': [lon, lat, ele]});
@@ -113,13 +114,13 @@ function update_shader() {
     
     paths.forEach( function(path) {
         paths_p.push([  path.vals[0].pos[1] - center[1],
-                        path.vals[0].pos[2] - mins[1],
+                        path.vals[0].pos[2] - mins[2],
                         -(path.vals[0].pos[0] - center[0])    ]);
         paths_c.push([0, 0, 0, 0]);
         
         path.vals.forEach( function(v) {
             paths_p.push([  v.pos[1] - center[1], 
-                            v.pos[2] - mins[1],
+                            v.pos[2] - mins[2],
                             -(v.pos[0] - center[0]) ]);
             paths_c.push(path.color);
         });
@@ -145,8 +146,8 @@ function update_shader() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_c), gl.DYNAMIC_DRAW);
     
     
-    var z = Math.max(paths[0].maxes[0], Math.max(paths[0].maxes[1], paths[0].maxes[2]));
-    camera = new Camera(pos = [0, 0, z]);
+    var z = Math.max(maxes[0], Math.max(maxes[1], maxes[2]));
+    camera = new Camera(pos = [0, 0, 2*z]);
     camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
     
     requestAnimationFrame(display);
