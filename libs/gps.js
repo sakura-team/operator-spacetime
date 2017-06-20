@@ -79,7 +79,7 @@ function gps_read(event) {
                     var name = tab[1].split('</name>')[0];
                 }
             }
-            paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes});
+            paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes, 'color':[Math.random(), Math.random(), Math.random(), 1.0]});
             
             if (paths.length == file.target.nb_paths)
                 update_shader();
@@ -96,15 +96,35 @@ function update_shader() {
     
     paths_p = [];
     paths_c = []
-    var center = [  (paths[0].maxes[0] + paths[0].mins[0]) /2.0,
-                    (paths[0].maxes[1] + paths[0].mins[1]) /2.0,
-                    (paths[0].maxes[2] + paths[0].mins[2]) /2.0   ];
     
-    paths[0].vals.forEach( function(v) {
-        paths_p.push([  v.pos[1] - center[1], 
-                        v.pos[2] - paths[0].mins[1],
-                        -(v.pos[0] - center[0]) ]);
-        paths_c.push([0.0, 1.0, 0.0, 1.0]);
+    ///Compute global center
+    var maxes   = [-10000000,   -10000000,  -10000000];
+    var mins    = [10000000,    10000000,   10000000];
+    paths.forEach( function(path) {
+        for (var i =0;i<3;i++) {
+            maxes[i] = Math.max(maxes[i], path.maxes[i]);
+            mins[i] = Math.min(mins[i], path.mins[i]);
+        }
+    });
+    
+    var center = [  (maxes[0] + mins[0]) /2.0,
+                    (maxes[1] + mins[1]) /2.0,
+                    (maxes[2] + mins[2]) /2.0   ];
+    
+    paths.forEach( function(path) {
+        paths_p.push([  path.vals[0].pos[1] - center[1],
+                        path.vals[0].pos[2] - mins[1],
+                        -(path.vals[0].pos[0] - center[0])    ]);
+        paths_c.push([0, 0, 0, 0]);
+        
+        path.vals.forEach( function(v) {
+            paths_p.push([  v.pos[1] - center[1], 
+                            v.pos[2] - mins[1],
+                            -(v.pos[0] - center[0]) ]);
+            paths_c.push(path.color);
+        });
+        paths_p.push(paths_p[paths_p.length - 1]);
+        paths_c.push([0, 0, 0, 0]);
     });
     
     paths_p_loc   = gl.getAttribLocation(paths_sh, "position");
