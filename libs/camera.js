@@ -28,4 +28,11 @@ class Camera {
         right   = m_normalize(m_cross(cam_dir, [0, 1, 0]));
         camera.up = m_normalize(m_cross(right, cam_dir));
     }
+    
+    forward(value) {
+        var cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
+        camera.pos = [  camera.pos[0] + value*cam_dir[0],
+                        camera.pos[1] + value*cam_dir[1],
+                        camera.pos[2] + value*cam_dir[2]    ];
+    }
 }

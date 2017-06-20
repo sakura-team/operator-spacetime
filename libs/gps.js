@@ -57,7 +57,7 @@ function gps_read(event) {
                     res = getXYpos(null_point, {'latitude': lat, 'longitude':lon});
                     lat = res[0]/1000;
                     lon = res[1]/1000;
-                    ele = (ele - null_point.elevation)/100;
+                    ele = (ele - null_point.elevation)/1000;
                     
                     tab = lines[i+2].split('<time>');
                     var time = Date.parse(tab[1].split('</time>')[0]);

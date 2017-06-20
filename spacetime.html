@@ -35,7 +35,7 @@
                 var tempx           = 0;
                 var camera          = new Camera(pos = [0, 0, 10]);
                 var mode            = "idle";
-                var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
+                var mouse           = {x: 0,y: 0,dx: 0,dy:  0, dz: 0}; //posx, poy, dx, dy
                 var paths           = [];
                 var rot_angle       = [0, 0];
                 var paths_p         = null; //position
@@ -96,10 +96,15 @@
                     return _gl;
                 }
                 
+                function handleMouseWheel (event) {
+                    event.preventDefault();
+                    mouse.dz += event.detail;
+                    requestAnimationFrame(display);
+                }
+                
                 
                 ///////////////////////////////////////////////////////////////////
                 // COMPUTATION FUNCS
-                
                 
                 function floor_pos(e) {
                     return [
@@ -216,6 +221,10 @@
                     rot_angle[0] = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
                     rot_angle[1] = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
                     camera.rotate(rot_angle);
+                    camera.forward(-mouse.dz/10.);
+                    mouse.dx = 0;
+                    mouse.dy = 0;
+                    mouse.dz = 0;
                     
                     /////////////////////////////////////////////////
                     // FLOOR
@@ -294,6 +303,9 @@
                     gl.enable(gl.CULL_FACE);
                     gl.enable(gl.BLEND);
                     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    
+                    canvas.addEventListener('DOMMouseScroll', handleMouseWheel, false);
+                    
                     requestAnimationFrame(display);
                 }
             </script>
