@@ -71,10 +71,19 @@
                     
                     
                     canvas.onmousedown = function (event) {
-                        mode = "rotation"
-                        mouse.x = event.clientX;
-                        mouse.y = event.clientY;
-                        requestAnimationFrame(display);
+                        event.preventDefault();
+                        if (event.button == 0) {
+                            mode = "rotation"
+                            mouse.x = event.clientX;
+                            mouse.y = event.clientY;
+                            requestAnimationFrame(display);
+                        }
+                        else if (event.button == 2) {
+                            mode = "translation"
+                            mouse.x = event.clientX;
+                            mouse.y = event.clientY;
+                            requestAnimationFrame(display);
+                        }
                     };
                     
                     canvas.onmouseup = function () {
@@ -83,7 +92,7 @@
                     };
                     
                     canvas.onmousemove = function (event) {
-                        if (mode == "rotation") {
+                        if (mode == "rotation" || mode == "translation") {
                             mouse.dx = event.clientX - mouse.x;
                             mouse.dy = event.clientY - mouse.y;
                             mouse.x = event.clientX;
@@ -96,12 +105,17 @@
                     return _gl;
                 }
                 
+                
                 function handleMouseWheel (event) {
                     event.preventDefault();
                     mouse.dz += event.detail;
                     requestAnimationFrame(display);
                 }
                 
+                
+                function handleMouseRight (event) {
+                    event.preventDefault();
+                }
                 
                 ///////////////////////////////////////////////////////////////////
                 // COMPUTATION FUNCS
@@ -218,9 +232,14 @@
                     
                     /////////////////////////////////////////////////
                     // CAMERA
-                    rot_angle[0] = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
-                    rot_angle[1] = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
-                    camera.rotate(rot_angle);
+                    if (mode == 'rotation') {
+                        rot_angle[0] = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
+                        rot_angle[1] = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
+                        camera.rotate(rot_angle);
+                    }
+                    else if (mode == 'translation') {
+                        camera.translate({'x': -mouse.dx/gl.drawingBufferWidth*10, 'y': mouse.dy/gl.drawingBufferHeight*10});
+                    }
                     camera.forward(-mouse.dz/10.);
                     mouse.dx = 0;
                     mouse.dy = 0;
@@ -242,7 +261,7 @@
                     
                     m_setMatrixUniforms(floor_sh,
                                         camera.projection,
-                                        m_lookAt(camera.pos, [0,0,0], camera.up)  );
+                                        m_lookAt(camera.pos, camera.vp, camera.up)  );
                     
                     gl.drawArrays(gl.TRIANGLES, 0, 36);
                     
@@ -264,7 +283,7 @@
                         
                         m_setMatrixUniforms(paths_sh,
                                             camera.projection,
-                                            m_lookAt(camera.pos, [0,0,0], camera.up)  );
+                                            m_lookAt(camera.pos, camera.vp, camera.up)  );
                         gl.drawArrays(gl.LINE_STRIP, 0, paths_p.length/3);
                     }
                 }
@@ -305,6 +324,7 @@
                     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     
                     canvas.addEventListener('DOMMouseScroll', handleMouseWheel, false);
+                    canvas.addEventListener('contextmenu', handleMouseRight, false);
                     
                     requestAnimationFrame(display);
                 }

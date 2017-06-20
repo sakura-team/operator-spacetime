@@ -6,11 +6,8 @@ class Camera {
                 vp = [0, 0, 0], 
                 up = [0, 1, 0], 
                 p = m_perspective(45, 4.0/3.0, 0.01, 1000)) {
-        this.init_pos   = pos;
         this.pos        = pos;
-        this.init_vp    = vp;
         this.vp         = vp;
-        this.init_up    = up;
         this.up         = up;
         this.projection = p;
     }
@@ -34,5 +31,16 @@ class Camera {
         camera.pos = [  camera.pos[0] + value*cam_dir[0],
                         camera.pos[1] + value*cam_dir[1],
                         camera.pos[2] + value*cam_dir[2]    ];
+    }
+    
+    translate(vals) {
+        var h_dir = m_normalize(m_vector(camera.pos, [camera.vp[0], camera.pos[1], camera.vp[2]]))
+        var right   = m_normalize(m_cross(h_dir, [0, 1, 0]));
+        camera.pos  = [ camera.pos[0] + vals.x*right[0] + vals.y*h_dir[0],
+                        camera.pos[1] + vals.x*right[1] + vals.y*h_dir[1],
+                        camera.pos[2] + vals.x*right[2] + vals.y*h_dir[2] ];
+        camera.vp   = [ camera.vp[0] + vals.x*right[0] + vals.y*h_dir[0],
+                        camera.vp[1] + vals.x*right[1] + vals.y*h_dir[1],
+                        camera.vp[2] + vals.x*right[2] + vals.y*h_dir[2] ];
     }
 }
