@@ -22,7 +22,7 @@ function getXYpos(relativeNullPoint, p) {
 
 function gps_read(event) {
     
-    paths = [];
+    gps_paths = [];
     var null_point = {'latitude': 0, 'longitude': 0, 'elevation': 0};
     
     for (var i = 0; i< event.target.files.length; i++) {
@@ -51,7 +51,7 @@ function gps_read(event) {
                     tab = lines[i+1].split('<ele>');
                     var ele = parseFloat(tab[1].split('</ele>')[0]);
                     
-                    if (vals.length == 0 && paths.length == 0) {
+                    if (vals.length == 0 && gps_paths.length == 0) {
                         null_point = {'latitude': lat, 'longitude': lon, 'elevation': ele};
                     }
                     res = getXYpos(null_point, {'latitude': lat, 'longitude':lon});
@@ -80,9 +80,9 @@ function gps_read(event) {
                     var name = tab[1].split('</name>')[0];
                 }
             }
-            paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes, 'color':[Math.random(), Math.random(), Math.random(), 1.0]});
+            gps_paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes, 'color':[Math.random(), Math.random(), Math.random(), 1.0]});
             
-            if (paths.length == file.target.nb_paths)
+            if (gps_paths.length == file.target.nb_paths)
                 update_shader();
         };
         
@@ -93,15 +93,15 @@ function gps_read(event) {
 }
 
 function update_shader() {
-    gl.useProgram(paths_sh);
+    gl.useProgram(paths.sh);
     
-    paths_p = [];
-    paths_c = []
+    paths.data[0].vals = [];
+    paths.data[1].vals = []
     
     ///Compute global center
     var maxes   = [-10000000,   -10000000,  -10000000];
     var mins    = [10000000,    10000000,   10000000];
-    paths.forEach( function(path) {
+    gps_paths.forEach( function(path) {
         for (var i =0;i<3;i++) {
             maxes[i] = Math.max(maxes[i], path.maxes[i]);
             mins[i] = Math.min(mins[i], path.mins[i]);
@@ -112,45 +112,45 @@ function update_shader() {
                     (maxes[1] + mins[1]) /2.0,
                     (maxes[2] + mins[2]) /2.0   ];
     
-    paths.forEach( function(path) {
-        paths_p.push([  path.vals[0].pos[1] - center[1],
+    gps_paths.forEach( function(path) {
+        paths.data[0].vals.push([  path.vals[0].pos[1] - center[1],
                         path.vals[0].pos[2] - mins[2],
                         -(path.vals[0].pos[0] - center[0])    ]);
-        paths_c.push([0, 0, 0, 0]);
+        paths.data[1].vals.push([0, 0, 0, 0]);
         
         path.vals.forEach( function(v) {
-            paths_p.push([  v.pos[1] - center[1], 
+            paths.data[0].vals.push([  v.pos[1] - center[1], 
                             v.pos[2] - mins[2],
                             -(v.pos[0] - center[0]) ]);
-            paths_c.push(path.color);
+            paths.data[1].vals.push(path.color);
         });
-        paths_p.push(paths_p[paths_p.length - 1]);
-        paths_c.push([0, 0, 0, 0]);
+        paths.data[0].vals.push(paths.data[0].vals[paths.data[0].vals.length - 1]);
+        paths.data[1].vals.push([0, 0, 0, 0]);
     });
     
-    paths_p_loc   = gl.getAttribLocation(paths_sh, "position");
-    gl.enableVertexAttribArray(paths_p_loc);
+    paths.data[0].loc   = gl.getAttribLocation(paths.sh, "position");
+    gl.enableVertexAttribArray(paths.data[0].loc);
     
-    paths_p         = [].concat.apply([], paths_p);
-    paths_p_buf     = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, paths_p_buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_p), gl.DYNAMIC_DRAW);
+    paths.data[0].vals  = [].concat.apply([], paths.data[0].vals);
+    paths.data[0].buf     = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[0].buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[0].vals), gl.DYNAMIC_DRAW);
     
     
-    paths_c_loc   = gl.getAttribLocation(paths_sh, "color");
-    gl.enableVertexAttribArray(paths_c_loc);
+    paths.data[1].loc   = gl.getAttribLocation(paths.sh, "color");
+    gl.enableVertexAttribArray(paths.data[1].loc);
     
-    paths_c         = [].concat.apply([], paths_c);
-    paths_c_buf     = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, paths_c_buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_c), gl.DYNAMIC_DRAW);
+    paths.data[1].vals         = [].concat.apply([], paths.data[1].vals);
+    paths.data[1].buf     = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[1].buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
     
     
     var z = Math.max(maxes[0], Math.max(maxes[1], maxes[2]));
     camera = new Camera(pos = [0, 0, 2*z]);
     camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
     
-    floor_p                = o_floor_p((maxes[0]-mins[0])/1.5, .05, (maxes[1]-mins[1])/1.5);
+    floor.data[0].vals                = o_floor_p((maxes[0]-mins[0])/1.5, .05, (maxes[1]-mins[1])/1.5);
     
     requestAnimationFrame(display);
 }

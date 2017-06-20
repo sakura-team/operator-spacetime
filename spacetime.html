@@ -26,26 +26,21 @@
                 ///////////////////////////////////////////////////////////////////
                 // GLOBALS
                 var gl              = null;     //main gl context
-                var floor_p         = null;     //vertices
-                var floor_p_buf     = null;
-                var floor_p_loc     = null;
-                var floor_n         = null;     //normals
-                var floor_n_buf     = null;
-                var floor_n_loc     = null;
                 var canvas          = document.getElementById("container");
                 var tempx           = 0;
                 var camera          = new Camera(pos = [0, 0, 10]);
                 var mode            = "idle";
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0, dz: 0}; //posx, poy, dx, dy
-                var paths           = [];
+                var gps_paths           = [];
                 var rot_angle       = [0, 0];
-                var paths_p         = null; //position
-                var paths_p_loc     = null;
-                var paths_p_buf     = null;
-                var paths_c         = null; //color
-                var paths_c_loc     = null;
-                var paths_c_buf     = null;
                 
+                //Shaders
+                var floor           = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
+                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // normals
+                var paths           = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
+                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // normals
+                
+                var cube_sh         = null;
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -148,19 +143,15 @@
                     
                     /////////////////////////////////////////////////
                     // FLOOR
-                    gl.useProgram(floor_sh);
-                    gl.enableVertexAttribArray(floor_p_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
-                    gl.vertexAttribPointer(floor_p_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
+                    gl.useProgram(floor.sh);
+                    floor.data.forEach( function (data) {
+                        gl.enableVertexAttribArray(data.loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, data.buf);
+                        gl.vertexAttribPointer(data.loc, 3, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.vals), gl.DYNAMIC_DRAW);
+                    });
                     
-                    gl.enableVertexAttribArray(floor_n_loc);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
-                    gl.vertexAttribPointer(floor_n_loc, 3, gl.FLOAT, false, 0, 0);
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
-                    
-                    
-                    m_setMatrixUniforms(floor_sh,
+                    m_setMatrixUniforms(floor.sh,
                                         camera.projection,
                                         m_lookAt(camera.pos, camera.vp, camera.up)  );
                     
@@ -169,23 +160,24 @@
                     
                     /////////////////////////////////////////////////
                     // PATHS
-                    if (paths.length) {
-                        gl.useProgram(paths_sh);
+                    if (gps_paths.length) {
+                        gl.useProgram(paths.sh);
                         
-                        gl.enableVertexAttribArray(paths_p_loc);
-                        gl.bindBuffer(gl.ARRAY_BUFFER, paths_p_buf);
-                        gl.vertexAttribPointer(paths_p_loc, 3, gl.FLOAT, false, 0, 0);
-                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_p), gl.DYNAMIC_DRAW);
+                        gl.enableVertexAttribArray(paths.data[0].loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[0].buf);
+                        gl.vertexAttribPointer(paths.data[0].loc, 3, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[0].vals), gl.DYNAMIC_DRAW);
                         
-                        gl.enableVertexAttribArray(paths_c_loc);
-                        gl.bindBuffer(gl.ARRAY_BUFFER, paths_c_buf);
-                        gl.vertexAttribPointer(paths_c_loc, 4, gl.FLOAT, false, 0, 0);
-                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_c), gl.DYNAMIC_DRAW);
+                        gl.enableVertexAttribArray(paths.data[1].loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[1].buf);
+                        gl.vertexAttribPointer(paths.data[1].loc, 4, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
                         
-                        m_setMatrixUniforms(paths_sh,
+                        m_setMatrixUniforms(paths.sh,
                                             camera.projection,
                                             m_lookAt(camera.pos, camera.vp, camera.up)  );
-                        gl.drawArrays(gl.LINE_STRIP, 0, paths_p.length/3);
+                        
+                        gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/3);
                     }
                 }
                 
@@ -195,25 +187,25 @@
                 gl                      = init_webgL(canvas);
                 
                 // FLOOR SHADER
-                floor_sh                = init_shader(gl, floor_fragment_source, floor_vertex_source);
+                floor.sh                = init_shader(gl, floor_fragment_source, floor_vertex_source);
                 
-                floor_n_loc            = gl.getAttribLocation(floor_sh, "normal");
-                gl.enableVertexAttribArray(floor_n_loc);
-                floor_n                = o_floor_n();
-                floor_n_buf            = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, floor_n_buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_n), gl.DYNAMIC_DRAW);
+                floor.data[1].loc   = gl.getAttribLocation(floor.sh, "normal");
+                floor.data[1].buf   = gl.createBuffer();
+                floor.data[1].vals   = o_floor_n();
+                gl.enableVertexAttribArray(floor.data[1].loc);
                 
-                floor_p_loc   = gl.getAttribLocation(floor_sh, "position");
-                gl.enableVertexAttribArray(floor_p_loc);
-                floor_p                = o_floor_p(2.0, .05, 2.0);
-                floor_p_buf            = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, floor_p_buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_p), gl.DYNAMIC_DRAW);
+                floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
+                floor.data[0].buf   = gl.createBuffer();
+                floor.data[0].vals  = o_floor_p(2.0, .05, 2.0);
+                gl.enableVertexAttribArray(floor.data[0].loc);
                 
                 
                 // PATHS SHADER
-                paths_sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
+                paths.sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
+                
+                
+                // CUBE SHADER
+                cube_sh                 = init_shader(gl, cube_fragment_source, cube_vertex_source)
                 
                 if (gl) {
                     gl.clearColor(0.5, 0.5, 1.0, 1.0);                      // Met la couleur d'effacement au noir et complétement opaque
@@ -231,6 +223,7 @@
                 }
             </script>
         </canvas>
+        <img src="staticmap.php?center=40.714728,-73.998672&zoom=14&size=865x512&maptype=mapnik" />
     </body>
 </html>
 
