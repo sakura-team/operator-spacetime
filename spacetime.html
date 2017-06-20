@@ -40,7 +40,7 @@
                 var paths           = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
                                                             {'vals': null, 'loc':null, 'buf': null}  ]}; // normals
                 
-                var cube_sh         = null;
+                var cube            = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null} ]}   //vertices
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
@@ -179,6 +179,21 @@
                         
                         gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/3);
                     }
+                    
+                    /////////////////////////////////////////////////
+                    // CUBE
+                    gl.useProgram(cube.sh);
+                    
+                    gl.enableVertexAttribArray(cube.data[0].loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, cube.data[0].buf);
+                    gl.vertexAttribPointer(cube.data[0].loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.data[0].vals), gl.DYNAMIC_DRAW);
+                    
+                    m_setMatrixUniforms(cube.sh,
+                                        camera.projection,
+                                        m_lookAt(camera.pos, camera.vp, camera.up)  );
+                        
+                    gl.drawArrays(gl.LINE_STRIP, 0, cube.data[0].vals.length/3);
                 }
                 
                 ///////////////////////////////////////////////////////////////////
@@ -191,21 +206,25 @@
                 
                 floor.data[1].loc   = gl.getAttribLocation(floor.sh, "normal");
                 floor.data[1].buf   = gl.createBuffer();
-                floor.data[1].vals   = o_floor_n();
+                floor.data[1].vals  = o_cube_n();
                 gl.enableVertexAttribArray(floor.data[1].loc);
                 
                 floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
                 floor.data[0].buf   = gl.createBuffer();
-                floor.data[0].vals  = o_floor_p(2.0, .05, 2.0);
+                floor.data[0].vals  = o_cube_p(size = [4.0, .05, 4.0], pos = [0, -.025, 0]);
                 gl.enableVertexAttribArray(floor.data[0].loc);
                 
                 
                 // PATHS SHADER
                 paths.sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
                 
-                
                 // CUBE SHADER
-                cube_sh                 = init_shader(gl, cube_fragment_source, cube_vertex_source)
+                cube.sh                 = init_shader(gl, cube_fragment_source, cube_vertex_source)
+                
+                cube.data[0].loc        = gl.getAttribLocation(cube.sh, "position");
+                cube.data[0].buf        = gl.createBuffer();
+                cube.data[0].vals       = o_wire_cube_p(size = [4.0, 4.0, 4.0], pos = [0, 2.0, 0]);
+                gl.enableVertexAttribArray(cube.data[0].loc);
                 
                 if (gl) {
                     gl.clearColor(0.5, 0.5, 1.0, 1.0);                      // Met la couleur d'effacement au noir et complétement opaque

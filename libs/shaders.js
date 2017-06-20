@@ -60,25 +60,19 @@ var paths_fragment_source = " \
 
 var cube_vertex_source = " \
     attribute vec3 position; \
-    attribute vec4 color; \
     uniform mat4 PMatrix; \
     uniform mat4 MVMatrix; \
     \
-    varying vec4 v_color; \
-    \
     void main(void) { \
         gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
-        v_color = color; \
     } \
 "
 
 var cube_fragment_source = " \
     precision highp float;\
     \
-    varying vec4 v_color; \
-    \
     void main(void) { \
-        gl_FragColor = v_color;\
+        gl_FragColor = vec4(0., 0., 0., 1.0);\
     } \
 "
 

@@ -2,62 +2,62 @@
 <!--Started on: June 20th, 2017-->
 
 
-function o_floor_p(sx, sy, sz) {
+function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     return [
-    // top facsz
-    -sx,  0.0,  sz,
-    sx, 0.0,  sz,
-    sx,  0.0,  -sz,
-    -sx, 0.0,  sz,
-    sx,  0.0,  -sz,
-    -sx,  0.0,  -sz,
+    // top face
+    -size[0]/2. + pos[0],  size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    //front facsz
-    -sx, 0.0,  sz,
-    -sx,  -sy,  sz,
-    sx,  0.0,  sz,
-    -sx,  -sy,  sz,
-    sx, -sy,  sz,
-    sx,  0.0,  sz,
+    //front facsize[2]/2. + pos[2]
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  size[2]/2. + pos[2],
      
-    //bottom facsz
-    -sx,  -sy,  sz,
-    sx,  -sy,  -sz,
-    sx, -sy,  sz,
-    -sx, -sy,  sz,
-    -sx,  -sy,  -sz,
-    sx,  -sy,  -sz,
+    //bottom facsize[2]/2. + pos[2]
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    // right facsz
-    sx, 0.0,  sz,
-    sx, -sy,  sz,
-    sx, 0.0,  -sz,
+    // right facsize[2]/2. + pos[2]
+    size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    sx, -sy,  sz,
-    sx, -sy,  -sz,
-    sx, 0.0,  -sz,
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    // lszft facsz
-    -sx, 0.0,  sz,
-    -sx, 0.0,  -sz,
-    -sx, -sy,  sz,
+    // lsize[2]/2. + pos[2]ft facsize[2]/2. + pos[2]
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
     
-    -sx, -sy,  sz,
-    -sx, 0.0,  -sz,
-    -sx, -sy,  -sz,
+    -size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0], -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    //back facsz
-    -sx, 0.0,  -sz,
-    sx,  0.0,  -sz,
-    -sx,  -sy,  -sz,
-    -sx,  -sy,  -sz,
-    sx,  0.0,  -sz,
-    sx, -sy,  -sz
+    //back facsize[2]/2. + pos[2]
+    -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
+    size[0]/2. + pos[0], -size[1]/2. + pos[1],  -size[2]/2. + pos[2]
     
   ];
 }
 
-function o_floor_n() {
+function o_cube_n() {
     return [
     // Front face
     0.0, 1.0,  0.0,
@@ -102,4 +102,29 @@ function o_floor_n() {
     0.0, 0.0,  -1.0,
     0.0, 0.0,  -1.0
     ]
+}
+
+function o_wire_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
+    return [
+    // top face
+    -size[0]/2. + pos[0],   -size[1]/2. + pos[1],   size[2]/2. + pos[2],
+    size[0]/2. + pos[0],    -size[1]/2. + pos[1],   size[2]/2. + pos[2],
+    size[0]/2. + pos[0],    size[1]/2. + pos[1],    size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],   size[1]/2. + pos[1],    size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],   -size[1]/2. + pos[1],   size[2]/2. + pos[2],
+    
+    -size[0]/2. + pos[0],   -size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],   -size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],   size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],   size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],   -size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    
+    -size[0]/2. + pos[0],   size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    -size[0]/2. + pos[0],   size[1]/2. + pos[1],   size[2]/2. + pos[2],
+    size[0]/2. + pos[0],    size[1]/2. + pos[1],    size[2]/2. + pos[2],
+    size[0]/2. + pos[0],   size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    
+    size[0]/2. + pos[0],   -size[1]/2. + pos[1],   -size[2]/2. + pos[2],
+    size[0]/2. + pos[0],   -size[1]/2. + pos[1],   size[2]/2. + pos[2]
+  ];
 }

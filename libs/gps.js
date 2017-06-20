@@ -150,7 +150,7 @@ function update_shader() {
     camera = new Camera(pos = [0, 0, 2*z]);
     camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
     
-    floor.data[0].vals                = o_floor_p((maxes[0]-mins[0])/1.5, .05, (maxes[1]-mins[1])/1.5);
+    floor.data[0].vals                = o_cube_p(size = [(maxes[0]-mins[0]), .05, (maxes[1]-mins[1])], pos = [0, -0.025, 0]);
     
     requestAnimationFrame(display);
 }
