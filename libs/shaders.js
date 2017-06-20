@@ -2,12 +2,12 @@
 <!--Started on: June 15th, 2017-->
 
 var floor_vertex_source = " \
-    attribute vec3 position; \
-    attribute vec3 normal; \
-    uniform mat4 PMatrix; \
-    uniform mat4 MVMatrix; \
+    attribute vec3  position; \
+    attribute vec3  normal; \
+    uniform mat4    PMatrix; \
+    uniform mat4    MVMatrix; \
     \
-    varying float v_light; \
+    varying float   v_light; \
     \
     vec3 light_pos = vec3(0, 1000, 1000);\
     \
@@ -26,7 +26,7 @@ var floor_vertex_source = " \
 var floor_fragment_source = " \
     precision highp float;\
      \
-    varying float v_light; \
+    varying float   v_light; \
     \
     void main(void) { \
         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
@@ -36,19 +36,25 @@ var floor_fragment_source = " \
 
 var paths_vertex_source = " \
     attribute vec3 position; \
+    attribute vec4 color; \
     uniform mat4 PMatrix; \
     uniform mat4 MVMatrix; \
     \
+    varying vec4 v_color; \
+    \
     void main(void) { \
         gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
+        v_color = color; \
     } \
 "
 
 var paths_fragment_source = " \
     precision highp float;\
-     \
+    \
+    varying vec4 v_color; \
+    \
     void main(void) { \
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \
+        gl_FragColor = v_color;\
     } \
 "
 

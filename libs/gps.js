@@ -93,7 +93,9 @@ function gps_read(event) {
 
 function update_shader() {
     gl.useProgram(paths_sh);
+    
     paths_p = [];
+    paths_c = []
     var center = [  (paths[0].maxes[0] + paths[0].mins[0]) /2.0,
                     (paths[0].maxes[1] + paths[0].mins[1]) /2.0,
                     (paths[0].maxes[2] + paths[0].mins[2]) /2.0   ];
@@ -102,6 +104,7 @@ function update_shader() {
         paths_p.push([  v.pos[1] - center[1], 
                         v.pos[2] - paths[0].mins[1],
                         -(v.pos[0] - center[0]) ]);
+        paths_c.push([0.0, 1.0, 0.0, 1.0]);
     });
     
     paths_p_loc   = gl.getAttribLocation(paths_sh, "position");
@@ -111,6 +114,16 @@ function update_shader() {
     paths_p_buf     = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, paths_p_buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_p), gl.DYNAMIC_DRAW);
+    
+    
+    paths_c_loc   = gl.getAttribLocation(paths_sh, "color");
+    gl.enableVertexAttribArray(paths_c_loc);
+    
+    paths_c         = [].concat.apply([], paths_c);
+    paths_c_buf     = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, paths_c_buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_c), gl.DYNAMIC_DRAW);
+    
     
     var z = Math.max(paths[0].maxes[0], Math.max(paths[0].maxes[1], paths[0].maxes[2]));
     camera = new Camera(pos = [0, 0, z]);

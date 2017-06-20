@@ -14,4 +14,18 @@ class Camera {
         this.up         = up;
         this.projection = p;
     }
+    
+    rotate(rot_angle) {
+        var cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
+        var right   = m_normalize(m_cross(cam_dir, camera.up));
+        var qy    = m_quaternion(rot_angle[1], right);
+        camera.pos = rotatePointWithPivot(camera.pos, qy, camera.vp);
+        
+        var qx = m_quaternion(rot_angle[0], [0, 1, 0]);
+        camera.pos = rotatePointWithPivot(camera.pos, qx, camera.vp);
+        
+        cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
+        right   = m_normalize(m_cross(cam_dir, [0, 1, 0]));
+        camera.up = m_normalize(m_cross(right, cam_dir));
+    }
 }

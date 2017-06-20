@@ -38,9 +38,12 @@
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0}; //posx, poy, dx, dy
                 var paths           = [];
                 var rot_angle       = [0, 0];
-                var paths_p     = null;
+                var paths_p         = null; //position
                 var paths_p_loc     = null;
                 var paths_p_buf     = null;
+                var paths_c         = null; //color
+                var paths_c_loc     = null;
+                var paths_c_buf     = null;
                 
                 
                 ///////////////////////////////////////////////////////////////////
@@ -212,21 +215,7 @@
                     // CAMERA
                     rot_angle[0] = 2*Math.PI*mouse.dx/parseFloat(canvas.width);
                     rot_angle[1] = 2*Math.PI*mouse.dy/parseFloat(canvas.height);
-                    
-                    
-                    var cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
-                    var right   = m_normalize(m_cross(cam_dir, camera.up));
-                    var qy    = m_quaternion(rot_angle[1], right);
-                    camera.pos = rotatePointWithPivot(camera.pos, qy, camera.vp);
-                    
-                    
-                    var qx = m_quaternion(rot_angle[0], [0, 1, 0]);
-                    camera.pos = rotatePointWithPivot(camera.pos, qx, camera.vp);
-                    
-                    cam_dir = m_normalize(m_vector(camera.pos, camera.vp))
-                    right   = m_normalize(m_cross(cam_dir, [0, 1, 0]));
-                    camera.up = m_normalize(m_cross(right, cam_dir));
-                    
+                    camera.rotate(rot_angle);
                     
                     /////////////////////////////////////////////////
                     // FLOOR
@@ -259,6 +248,10 @@
                         gl.vertexAttribPointer(paths_p_loc, 3, gl.FLOAT, false, 0, 0);
                         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_p), gl.DYNAMIC_DRAW);
                         
+                        gl.enableVertexAttribArray(paths_c_loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, paths_c_buf);
+                        gl.vertexAttribPointer(paths_c_loc, 4, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths_c), gl.DYNAMIC_DRAW);
                         
                         m_setMatrixUniforms(paths_sh,
                                             camera.projection,
