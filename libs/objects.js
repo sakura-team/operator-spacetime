@@ -1,6 +1,29 @@
 <!--Code started by Michael Ortega for the LIG-->
 <!--Started on: June 20th, 2017-->
 
+function o_floor_p(size = [1.0, 1.0], pos = [0, 0, 0]) {
+    return [
+        -size[0]/2. + pos[0],  pos[1],  size[1]/2. + pos[2],
+        size[0]/2. + pos[0], pos[1],  size[1]/2. + pos[2],
+        size[0]/2. + pos[0],  pos[1],  -size[1]/2. + pos[2],
+        
+        -size[0]/2. + pos[0], pos[1],  size[1]/2. + pos[2],
+        size[0]/2. + pos[0],  pos[1],  -size[1]/2. + pos[2],
+        -size[0]/2. + pos[0],  pos[1],  -size[1]/2. + pos[2]
+    ]
+}
+
+
+function o_floor_n() {
+    return [
+        0.0, 1.0,  0.0,
+        0.0, 1.0,  0.0,
+        0.0, 1.0,  0.0,
+        0.0, 1.0,  0.0,
+        0.0, 1.0,  0.0,
+        0.0, 1.0,  0.0
+    ]
+}
 
 function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     return [
@@ -12,7 +35,7 @@ function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     -size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    //front facsize[2]/2. + pos[2]
+    //front face
     -size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
     -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  size[2]/2. + pos[2],
     size[0]/2. + pos[0],  size[1]/2. + pos[1],  size[2]/2. + pos[2],
@@ -20,7 +43,7 @@ function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
     size[0]/2. + pos[0],  size[1]/2. + pos[1],  size[2]/2. + pos[2],
      
-    //bottom facsize[2]/2. + pos[2]
+    //bottom face
     -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  size[2]/2. + pos[2],
     size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
@@ -28,7 +51,7 @@ function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    // right facsize[2]/2. + pos[2]
+    // right face
     size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
     size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
     size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
@@ -37,7 +60,7 @@ function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     size[0]/2. + pos[0], -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    // lsize[2]/2. + pos[2]ft facsize[2]/2. + pos[2]
+    // left face
     -size[0]/2. + pos[0], size[1]/2. + pos[1],  size[2]/2. + pos[2],
     -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     -size[0]/2. + pos[0], -size[1]/2. + pos[1],  size[2]/2. + pos[2],
@@ -46,7 +69,7 @@ function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     -size[0]/2. + pos[0], -size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     
-    //back facsize[2]/2. + pos[2]
+    //back face
     -size[0]/2. + pos[0], size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     size[0]/2. + pos[0],  size[1]/2. + pos[1],  -size[2]/2. + pos[2],
     -size[0]/2. + pos[0],  -size[1]/2. + pos[1],  -size[2]/2. + pos[2],

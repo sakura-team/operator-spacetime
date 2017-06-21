@@ -155,7 +155,7 @@
                                         camera.projection,
                                         m_lookAt(camera.pos, camera.vp, camera.up)  );
                     
-                    gl.drawArrays(gl.TRIANGLES, 0, 36);
+                    gl.drawArrays(gl.TRIANGLES, 0, floor.data[0].vals.length/3);
                     
                     
                     /////////////////////////////////////////////////
@@ -176,7 +176,7 @@
                         m_setMatrixUniforms(paths.sh,
                                             camera.projection,
                                             m_lookAt(camera.pos, camera.vp, camera.up)  );
-                        
+                        gl.lineWidth(3);
                         gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/3);
                     }
                     
@@ -192,7 +192,7 @@
                     m_setMatrixUniforms(cube.sh,
                                         camera.projection,
                                         m_lookAt(camera.pos, camera.vp, camera.up)  );
-                        
+                    gl.lineWidth(1);
                     gl.drawArrays(gl.LINE_STRIP, 0, cube.data[0].vals.length/3);
                 }
                 
@@ -206,12 +206,12 @@
                 
                 floor.data[1].loc   = gl.getAttribLocation(floor.sh, "normal");
                 floor.data[1].buf   = gl.createBuffer();
-                floor.data[1].vals  = o_cube_n();
+                floor.data[1].vals  = o_floor_n();
                 gl.enableVertexAttribArray(floor.data[1].loc);
                 
                 floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
                 floor.data[0].buf   = gl.createBuffer();
-                floor.data[0].vals  = o_cube_p(size = [4.0, .05, 4.0], pos = [0, -.025, 0]);
+                floor.data[0].vals  = o_floor_p(size = [4.0, 4.0], pos = [0, 0, 0]);
                 gl.enableVertexAttribArray(floor.data[0].loc);
                 
                 

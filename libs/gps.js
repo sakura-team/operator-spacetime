@@ -120,7 +120,7 @@ function update_shader() {
         
         path.vals.forEach( function(v) {
             paths.data[0].vals.push([  v.pos[1] - center[1], 
-                            v.pos[2] - mins[2],
+                            0,//v.pos[2] - mins[2],
                             -(v.pos[0] - center[0]) ]);
             paths.data[1].vals.push(path.color);
         });
@@ -150,7 +150,9 @@ function update_shader() {
     camera = new Camera(pos = [0, 0, 2*z]);
     camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
     
-    floor.data[0].vals                = o_cube_p(size = [(maxes[0]-mins[0]), .05, (maxes[1]-mins[1])], pos = [0, -0.025, 0]);
+    floor.data[0].vals      = o_floor_p(size = [(maxes[1]-mins[1]), (maxes[0]-mins[0])], pos = [0, 0, 0]);
+    var cube_h = 4.0;
+    cube.data[0].vals       = o_wire_cube_p(size = [(maxes[1]-mins[1]), cube_h, (maxes[0]-mins[0])], pos = [0, cube_h/2.0 + maxes[2], 0]);
     
     requestAnimationFrame(display);
 }
