@@ -4,10 +4,12 @@
 var floor_vertex_source = " \
     attribute vec3  position; \
     attribute vec3  normal; \
+    attribute vec2  texture_coords; \
     uniform mat4    PMatrix; \
     uniform mat4    MVMatrix; \
     \
     varying float   v_light; \
+    varying highp vec2    v_texture_coords; \
     \
     vec3 light_pos = vec3(0, 1000, 1000);\
     \
@@ -21,16 +23,21 @@ var floor_vertex_source = " \
         v_light = max(dot(v_normal, light_inv_ray), 0.0); \
         \
         gl_Position = PMatrix * p; \
+        v_texture_coords = texture_coords; \
     } \
 "
 var floor_fragment_source = " \
     precision highp float;\
      \
     varying float   v_light; \
+    varying highp vec2 v_texture_coords; \
+    uniform sampler2D picture; \
+    uniform sampler2D shading; \
     \
     void main(void) { \
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
-        gl_FragColor.rgb *= v_light; \
+        gl_FragColor = texture2D(picture, vec2(v_texture_coords.s, v_texture_coords.t)); \
+        float s = texture2D(shading, vec2(v_texture_coords.s, v_texture_coords.t)).s; \
+        gl_FragColor.rgb *= (s/4.0+0.75); \
     } \
 "
 

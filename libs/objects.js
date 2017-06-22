@@ -10,7 +10,7 @@ function o_floor_p(size = [1.0, 1.0], pos = [0, 0, 0]) {
         -size[0]/2. + pos[0], pos[1],  size[1]/2. + pos[2],
         size[0]/2. + pos[0],  pos[1],  -size[1]/2. + pos[2],
         -size[0]/2. + pos[0],  pos[1],  -size[1]/2. + pos[2]
-    ]
+    ];
 }
 
 
@@ -22,8 +22,22 @@ function o_floor_n() {
         0.0, 1.0,  0.0,
         0.0, 1.0,  0.0,
         0.0, 1.0,  0.0
-    ]
+    ];
 }
+
+
+function o_floor_t() {
+    return [
+        0.0,  1.0,
+        1.0,  1.0,
+        1.0,  0.0,
+        
+        0.0,  1.0,
+        1.0,  0.0,
+        0.0,  0.0
+    ];
+}
+
 
 function o_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {
     return [
@@ -124,7 +138,7 @@ function o_cube_n() {
     0.0, 0.0,  -1.0,
     0.0, 0.0,  -1.0,
     0.0, 0.0,  -1.0
-    ]
+    ];
 }
 
 function o_wire_cube_p(size = [1.0, 1.0, 1.0], pos = [0, 0, 0]) {

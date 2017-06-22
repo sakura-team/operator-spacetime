@@ -35,15 +35,31 @@
                 var rot_angle       = [0, 0];
                 
                 //Shaders
-                var floor           = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
-                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // normals
+                var floor           = { 'sh': null, 
+                                        'data': [   {'vals': null, 'loc':null, 'buf': null},    // vertices
+                                                    {'vals': null, 'loc':null, 'buf': null},    // normals
+                                                    {'vals': null, 'loc':null, 'buf': null}],   // texture
+                                        'image':    { 'pic': new Image(), 'texture': null},   //picture
+                                        'shade':    { 'pic': new Image(), 'texture': null}  };   //shading
+                
                 var paths           = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
-                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // normals
+                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // colors
                 
                 var cube            = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null} ]}   //vertices
                 
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
+                
+                function handleTextureLoaded (image, texture, id) {
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                }
+                
+                
                 function init_webgL(_canvas) { 
                     
                     _canvas.width = _canvas.clientWidth;
@@ -114,12 +130,6 @@
                 }
                 
                 ///////////////////////////////////////////////////////////////////
-                // COMPUTATION FUNCS
-                
-                
-                
-                
-                ///////////////////////////////////////////////////////////////////
                 // DISPLAY FUNCS
                 
                 function display() {
@@ -144,19 +154,38 @@
                     /////////////////////////////////////////////////
                     // FLOOR
                     gl.useProgram(floor.sh);
-                    floor.data.forEach( function (data) {
-                        gl.enableVertexAttribArray(data.loc);
-                        gl.bindBuffer(gl.ARRAY_BUFFER, data.buf);
-                        gl.vertexAttribPointer(data.loc, 3, gl.FLOAT, false, 0, 0);
-                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.vals), gl.DYNAMIC_DRAW);
-                    });
+                    
+                    //vertices
+                    gl.enableVertexAttribArray(floor.data[0].loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor.data[0].buf);
+                    gl.vertexAttribPointer(floor.data[0].loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor.data[0].vals), gl.DYNAMIC_DRAW);
+                    
+                    //normals
+                    gl.enableVertexAttribArray(floor.data[1].loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor.data[1].buf);
+                    gl.vertexAttribPointer(floor.data[1].loc, 3, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor.data[1].vals), gl.DYNAMIC_DRAW);
+                    
+                    //picture texture coords
+                    gl.enableVertexAttribArray(floor.data[2].loc);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, floor.data[2].buf);
+                    gl.vertexAttribPointer(floor.data[2].loc, 2, gl.FLOAT, false, 0, 0);
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor.data[2].vals), gl.DYNAMIC_DRAW);
                     
                     m_setMatrixUniforms(floor.sh,
                                         camera.projection,
                                         m_lookAt(camera.pos, camera.vp, camera.up)  );
                     
-                    gl.drawArrays(gl.TRIANGLES, 0, floor.data[0].vals.length/3);
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, floor.image.texture);
+                    gl.uniform1i(gl.getUniformLocation(floor.sh, "picture"), 0);
                     
+                    gl.activeTexture(gl.TEXTURE1);
+                    gl.bindTexture(gl.TEXTURE_2D, floor.shade.texture);
+                    gl.uniform1i(gl.getUniformLocation(floor.sh, "shading"), 1);
+                    
+                    gl.drawArrays(gl.TRIANGLES, 0, floor.data[0].vals.length/3);
                     
                     /////////////////////////////////////////////////
                     // PATHS
@@ -206,15 +235,31 @@
                 // FLOOR SHADER
                 floor.sh                = init_shader(gl, floor_fragment_source, floor_vertex_source);
                 
+                //positions
+                floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
+                floor.data[0].buf   = gl.createBuffer();
+                floor.data[0].vals  = o_floor_p(size = [1000.0, 1000.0], pos = [0, 0, 0]);
+                gl.enableVertexAttribArray(floor.data[0].loc);
+                
+                //normals
                 floor.data[1].loc   = gl.getAttribLocation(floor.sh, "normal");
                 floor.data[1].buf   = gl.createBuffer();
                 floor.data[1].vals  = o_floor_n();
                 gl.enableVertexAttribArray(floor.data[1].loc);
                 
-                floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
-                floor.data[0].buf   = gl.createBuffer();
-                floor.data[0].vals  = o_floor_p(size = [1000.0, 1000.0], pos = [0, 0, 0]);
-                gl.enableVertexAttribArray(floor.data[0].loc);
+                //texture
+                floor.image.texture = gl.createTexture();
+                floor.image.pic.onload = function() { handleTextureLoaded(floor.image.pic, floor.image.texture, 0); }
+                floor.image.pic.src = "img/sakura_flower.png";
+                
+                floor.shade.texture = gl.createTexture();
+                floor.shade.pic.onload = function() { handleTextureLoaded(floor.shade.pic, floor.shade.texture, 1); }
+                floor.shade.pic.src = "img/sakura_flower_shading.png";
+                
+                floor.data[2].loc   = gl.getAttribLocation(floor.sh, "texture_coords");
+                floor.data[2].buf   = gl.createBuffer();
+                floor.data[2].vals  = o_floor_t();
+                gl.enableVertexAttribArray(floor.data[2].loc);
                 
                 
                 // PATHS SHADER
@@ -243,7 +288,6 @@
                     requestAnimationFrame(display);
                 }
             </script>
-            
         </canvas>
     </body>
 </html>

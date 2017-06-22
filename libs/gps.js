@@ -116,13 +116,13 @@ function update_shader() {
     
     gps_paths.forEach( function(path) {
         paths.data[0].vals.push([   path.vals[0].lon - center[0],
-                                    path.vals[0].ele - mins[2],
+                                    1,//path.vals[0].ele - mins[2],
                                     -(path.vals[0].lat - center[1])    ]);
         paths.data[1].vals.push([0, 0, 0, 0]);
         
         path.vals.forEach( function(v) {
             paths.data[0].vals.push([   v.lon - center[0], 
-                                        0,//v.pos[2] - mins[2],
+                                        1,//v.ele - mins[2],
                                         -(v.lat - center[1]) ]);
             paths.data[1].vals.push(path.color);
         });
@@ -150,11 +150,27 @@ function update_shader() {
     var z = Math.max(maxes[0]-center[0], Math.max(maxes[1]-center[1], maxes[2]-center[2]));
     console.log(z);
     camera = new Camera(pos = [0, 0, 2*z]);
-    camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 1, 100000);
+    camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 1, 1000000);
     
     floor.data[0].vals      = o_floor_p(size = [(maxes[0]-mins[0]), (maxes[1]-mins[1])], pos = [0, - 1, 0]);
     var cube_h = Math.min((maxes[0]-mins[0]), (maxes[1]-mins[1]))/2;
     cube.data[0].vals       = o_wire_cube_p(size = [(maxes[0]-mins[0]), cube_h, (maxes[1]-mins[1])], pos = [0, cube_h/2.0 + maxes[2], 0]);
+    
+    floor.image.pic.crossOrigin = "anonymous";
+    floor.shade.pic.crossOrigin = "anonymous";
+    
+    floor.image.pic.src = 'http://129.206.228.72/cached/osm?LAYERS=osm_auto:all&SRS=EPSG:900913&FORMAT=image/png&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&BBOX='+mins[0]+','+mins[1]+','+maxes[0]+','+maxes[1]+'&WIDTH=1024&HEIGHT=1024';
+    floor.shade.pic.src = 'http://129.206.228.72/cached/hillshade?LAYERS=europe_wms:hs_srtm_europa&SRS=EPSG:900913&FORMAT=image/png&TRANSPARENT=true&NUMZOOMLEVELS=19&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&BBOX='+mins[0]+','+mins[1]+','+maxes[0]+','+maxes[1]+'&WIDTH=1024&HEIGHT=1024'
+    
+    floor.image.pic.onload = function() {
+        handleTextureLoaded(floor.image.pic, floor.image.texture, 0);
+        requestAnimationFrame(display);
+    };
+    
+    floor.shade.pic.onload = function() {
+        handleTextureLoaded(floor.shade.pic, floor.shade.texture, 1);
+        requestAnimationFrame(display);
+    };
     
     //var img = request_image(mins, maxes);
     requestAnimationFrame(display);
