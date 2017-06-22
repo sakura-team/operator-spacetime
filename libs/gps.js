@@ -2,23 +2,22 @@
 <!--Started on: June 19th, 2017-->
 
 
-const RAD = 0.000008998719243599958;
 
-function asRadians(degrees) {
+function radians(degrees) {
     return degrees * Math.PI / 180;
 }
 
 
-function getXYpos(relativeNullPoint, p) {
-    
-    var deltaLatitude = p.latitude - relativeNullPoint.latitude;
-    var deltaLongitude = p.longitude - relativeNullPoint.longitude;
-    var latitudeCircumference = 40075160 * Math.cos(asRadians(relativeNullPoint.latitude));
-    var resultX = deltaLongitude * latitudeCircumference / 360;
-    var resultY = deltaLatitude * 40008000 / 360;
-    return [resultX, resultY];
+function mercator(lat, lon) {
+    var r_major = 6378137.000;
+    var x = r_major * radians(lon);
+    var scale = x/lon;
+    var y = 180.0/Math.PI * Math.log(Math.tan(Math.PI/4.0 + lat * (Math.PI/180.0)/2.0)) * scale;
+    return {'lon': x, 'lat':y}
 }
 
+
+//http://129.206.228.72/cached/osm?LAYERS=osm_auto:all&SRS=EPSG:900913&FORMAT=image/png&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&BBOX=642032.9367603894,5651469.115874138,658852.9778607808,5670179.593138174&WIDTH=1024&HEIGHT=1024
 
 function gps_read(event) {
     
@@ -33,9 +32,8 @@ function gps_read(event) {
             
             var vals    = [];
             var lines   = file.target.result.split(/\r?\n/);
-            var mins    = [1000000, 1000000, 1000000];
-            var maxes   = [-1000000, -1000000, -1000000];
-            
+            var mins    = [Infinity, Infinity, Infinity];
+            var maxes   = [-Infinity, -Infinity, -Infinity];
             
             for (var i =0 ; i<lines.length; i++) {
                 if (lines[i].indexOf('<trkpt') != -1) {
@@ -51,13 +49,17 @@ function gps_read(event) {
                     tab = lines[i+1].split('<ele>');
                     var ele = parseFloat(tab[1].split('</ele>')[0]);
                     
+                    //console.log(lat, lon, ll2tile(lat, lon, 19));
+                    
                     if (vals.length == 0 && gps_paths.length == 0) {
                         null_point = {'latitude': lat, 'longitude': lon, 'elevation': ele};
                     }
-                    res = getXYpos(null_point, {'latitude': lat, 'longitude':lon});
-                    lat = res[0]/1000;
-                    lon = res[1]/1000;
-                    ele = (ele - null_point.elevation)/1000;
+                    
+                    
+                    res = mercator(lat, lon);   //getXYpos(null_point, {'latitude': lat, 'longitude':lon});
+                    //console.log(res, mercator(lat, lon));
+                    lat = res.lat;
+                    lon = res.lon;
                     
                     tab = lines[i+2].split('<time>');
                     var time = Date.parse(tab[1].split('</time>')[0]);
@@ -73,7 +75,7 @@ function gps_read(event) {
                     maxes[2]= Math.max(ele, maxes[2]);
                     
                     // PUSH
-                    vals.push({'time': time, 'pos': [lon, lat, ele]});
+                    vals.push({'time': time, 'lon': lon, 'lat':lat, 'ele':ele});
                 }
                 else if (lines[i].indexOf('<name>') != -1) {
                     var tab = lines[i].split('<name>');
@@ -113,15 +115,15 @@ function update_shader() {
                     (maxes[2] + mins[2]) /2.0   ];
     
     gps_paths.forEach( function(path) {
-        paths.data[0].vals.push([  path.vals[0].pos[1] - center[1],
-                        path.vals[0].pos[2] - mins[2],
-                        -(path.vals[0].pos[0] - center[0])    ]);
+        paths.data[0].vals.push([   path.vals[0].lon - center[0],
+                                    path.vals[0].ele - mins[2],
+                                    -(path.vals[0].lat - center[1])    ]);
         paths.data[1].vals.push([0, 0, 0, 0]);
         
         path.vals.forEach( function(v) {
-            paths.data[0].vals.push([  v.pos[1] - center[1], 
-                            0,//v.pos[2] - mins[2],
-                            -(v.pos[0] - center[0]) ]);
+            paths.data[0].vals.push([   v.lon - center[0], 
+                                        0,//v.pos[2] - mins[2],
+                                        -(v.lat - center[1]) ]);
             paths.data[1].vals.push(path.color);
         });
         paths.data[0].vals.push(paths.data[0].vals[paths.data[0].vals.length - 1]);
@@ -145,14 +147,15 @@ function update_shader() {
     gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[1].buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
     
-    
-    var z = Math.max(maxes[0], Math.max(maxes[1], maxes[2]));
+    var z = Math.max(maxes[0]-center[0], Math.max(maxes[1]-center[1], maxes[2]-center[2]));
+    console.log(z);
     camera = new Camera(pos = [0, 0, 2*z]);
-    camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 0.01, 1000);
+    camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 1, 100000);
     
-    floor.data[0].vals      = o_floor_p(size = [(maxes[1]-mins[1]), (maxes[0]-mins[0])], pos = [0, 0, 0]);
-    var cube_h = 4.0;
-    cube.data[0].vals       = o_wire_cube_p(size = [(maxes[1]-mins[1]), cube_h, (maxes[0]-mins[0])], pos = [0, cube_h/2.0 + maxes[2], 0]);
+    floor.data[0].vals      = o_floor_p(size = [(maxes[0]-mins[0]), (maxes[1]-mins[1])], pos = [0, - 1, 0]);
+    var cube_h = Math.min((maxes[0]-mins[0]), (maxes[1]-mins[1]))/2;
+    cube.data[0].vals       = o_wire_cube_p(size = [(maxes[0]-mins[0]), cube_h, (maxes[1]-mins[1])], pos = [0, cube_h/2.0 + maxes[2], 0]);
     
+    //var img = request_image(mins, maxes);
     requestAnimationFrame(display);
 }

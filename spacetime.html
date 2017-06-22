@@ -28,7 +28,7 @@
                 var gl              = null;     //main gl context
                 var canvas          = document.getElementById("container");
                 var tempx           = 0;
-                var camera          = new Camera(pos = [0, 0, 10]);
+                var camera          = new Camera(pos = [0, 0, 3000]);
                 var mode            = "idle";
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0, dz: 0}; //posx, poy, dx, dy
                 var gps_paths           = [];
@@ -97,14 +97,14 @@
                         }
                     }
                     
-                    camera.projection = m_perspective(45, _gl.drawingBufferWidth/_gl.drawingBufferHeight, 0.01, 1000);
+                    camera.projection = m_perspective(45, _gl.drawingBufferWidth/_gl.drawingBufferHeight, 1, 10000);
                     return _gl;
                 }
                 
                 
                 function handleMouseWheel (event) {
                     event.preventDefault();
-                    mouse.dz += event.detail;
+                    mouse.dz += event.detail*500;
                     requestAnimationFrame(display);
                 }
                 
@@ -134,7 +134,7 @@
                         camera.rotate(rot_angle);
                     }
                     else if (mode == 'translation') {
-                        camera.translate({'x': -mouse.dx/gl.drawingBufferWidth*10, 'y': mouse.dy/gl.drawingBufferHeight*10});
+                        camera.translate({'x': -mouse.dx/gl.drawingBufferWidth*5000, 'y': mouse.dy/gl.drawingBufferHeight*5000});
                     }
                     camera.forward(-mouse.dz/10.);
                     mouse.dx = 0;
@@ -160,6 +160,7 @@
                     
                     /////////////////////////////////////////////////
                     // PATHS
+                    gl.disable(gl.DEPTH_TEST);
                     if (gps_paths.length) {
                         gl.useProgram(paths.sh);
                         
@@ -179,6 +180,7 @@
                         gl.lineWidth(3);
                         gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/3);
                     }
+                    gl.enable(gl.DEPTH_TEST);
                     
                     /////////////////////////////////////////////////
                     // CUBE
@@ -211,7 +213,7 @@
                 
                 floor.data[0].loc   = gl.getAttribLocation(floor.sh, "position");
                 floor.data[0].buf   = gl.createBuffer();
-                floor.data[0].vals  = o_floor_p(size = [4.0, 4.0], pos = [0, 0, 0]);
+                floor.data[0].vals  = o_floor_p(size = [1000.0, 1000.0], pos = [0, 0, 0]);
                 gl.enableVertexAttribArray(floor.data[0].loc);
                 
                 
@@ -223,7 +225,7 @@
                 
                 cube.data[0].loc        = gl.getAttribLocation(cube.sh, "position");
                 cube.data[0].buf        = gl.createBuffer();
-                cube.data[0].vals       = o_wire_cube_p(size = [4.0, 4.0, 4.0], pos = [0, 2.0, 0]);
+                cube.data[0].vals       = o_wire_cube_p(size = [1000.0, 1000.0, 1000.0], pos = [0, 500.0, 0]);
                 gl.enableVertexAttribArray(cube.data[0].loc);
                 
                 if (gl) {
@@ -241,8 +243,8 @@
                     requestAnimationFrame(display);
                 }
             </script>
+            
         </canvas>
-        <img src="staticmap.php?center=40.714728,-73.998672&zoom=14&size=865x512&maptype=mapnik" />
     </body>
 </html>
 
