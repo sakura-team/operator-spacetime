@@ -49,8 +49,6 @@ function gps_read(event) {
                     tab = lines[i+1].split('<ele>');
                     var ele = parseFloat(tab[1].split('</ele>')[0]);
                     
-                    //console.log(lat, lon, ll2tile(lat, lon, 19));
-                    
                     if (vals.length == 0 && gps_paths.length == 0) {
                         null_point = {'latitude': lat, 'longitude': lon, 'elevation': ele};
                     }
@@ -99,6 +97,8 @@ function gps_read(event) {
 
 function update_shader() {
     
+    var nb_vals = 0;
+    
     paths.data[0].vals = [];
     paths.data[1].vals = []
     cube_paths.data[0].vals = [];
@@ -110,6 +110,7 @@ function update_shader() {
     var max_inter = -Infinity;
     
     gps_paths.forEach( function(path) {
+        nb_vals += path.vals.length
         for (var i =0;i<3;i++) {
             maxes[i] = Math.max(maxes[i], path.maxes[i]);
             mins[i] = Math.min(mins[i], path.mins[i]);
@@ -117,7 +118,8 @@ function update_shader() {
         max_inter = Math.max(max_inter, path.maxes[3]-path.mins[3]);
     });
     
-    console.log(maxes, mins);
+    console.log("nb paths:", gps_paths.length);
+    console.log("total nb of points:", nb_vals);
     var center = [  (maxes[0] + mins[0]) /2.0,
                     (maxes[1] + mins[1]) /2.0,
                     (maxes[2] + mins[2]) /2.0   ];
