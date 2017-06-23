@@ -32,8 +32,8 @@ function gps_read(event) {
             
             var vals    = [];
             var lines   = file.target.result.split(/\r?\n/);
-            var mins    = [Infinity, Infinity, Infinity];
-            var maxes   = [-Infinity, -Infinity, -Infinity];
+            var mins    = [Infinity, Infinity, Infinity, Infinity];
+            var maxes   = [-Infinity, -Infinity, -Infinity, -Infinity];
             
             for (var i =0 ; i<lines.length; i++) {
                 if (lines[i].indexOf('<trkpt') != -1) {
@@ -62,7 +62,7 @@ function gps_read(event) {
                     lon = res.lon;
                     
                     tab = lines[i+2].split('<time>');
-                    var time = Date.parse(tab[1].split('</time>')[0]);
+                    var ti = Date.parse(tab[1].split('</time>')[0]);
                     
                     //MIN MAX
                     mins[0] = Math.min(lon, mins[0]);
@@ -74,8 +74,11 @@ function gps_read(event) {
                     mins[2] = Math.min(ele, mins[2]);
                     maxes[2]= Math.max(ele, maxes[2]);
                     
+                    mins[3] = Math.min(ti, mins[3]);
+                    maxes[3]= Math.max(ti, maxes[3]);
+                    
                     // PUSH
-                    vals.push({'time': time, 'lon': lon, 'lat':lat, 'ele':ele});
+                    vals.push({'time': ti, 'lon': lon, 'lat':lat, 'ele':ele});
                 }
                 else if (lines[i].indexOf('<name>') != -1) {
                     var tab = lines[i].split('<name>');
@@ -83,7 +86,7 @@ function gps_read(event) {
                 }
             }
             gps_paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes, 'color':[Math.random(), Math.random(), Math.random(), 1.0]});
-            
+            //gps_paths.push({'name': name, 'file_name': file.target.file_name, 'vals': vals, 'mins': mins, 'maxes': maxes, 'color':[0, 0, 0, 1.0]});
             if (gps_paths.length == file.target.nb_paths)
                 update_shader();
         };
@@ -95,40 +98,54 @@ function gps_read(event) {
 }
 
 function update_shader() {
-    gl.useProgram(paths.sh);
     
     paths.data[0].vals = [];
     paths.data[1].vals = []
+    cube_paths.data[0].vals = [];
+    cube_paths.data[1].vals = []
     
     ///Compute global center
-    var maxes   = [-10000000,   -10000000,  -10000000];
-    var mins    = [10000000,    10000000,   10000000];
+    var maxes   = [-Infinity,   -Infinity,  -Infinity,];
+    var mins    = [Infinity,    Infinity,   Infinity,];
+    var max_inter = -Infinity;
+    
     gps_paths.forEach( function(path) {
         for (var i =0;i<3;i++) {
             maxes[i] = Math.max(maxes[i], path.maxes[i]);
             mins[i] = Math.min(mins[i], path.mins[i]);
         }
+        max_inter = Math.max(max_inter, path.maxes[3]-path.mins[3]);
     });
     
+    console.log(maxes, mins);
     var center = [  (maxes[0] + mins[0]) /2.0,
                     (maxes[1] + mins[1]) /2.0,
                     (maxes[2] + mins[2]) /2.0   ];
+    var cube_h = Math.min((maxes[0]-mins[0]), (maxes[1]-mins[1]))/2;
     
+    ///Create the path array for the cube shader
     gps_paths.forEach( function(path) {
+        //floor_paths
         paths.data[0].vals.push([   path.vals[0].lon - center[0],
-                                    1,//path.vals[0].ele - mins[2],
-                                    -(path.vals[0].lat - center[1])    ]);
+                                    path.vals[0].ele - mins[2],
+                                    -(path.vals[0].lat - center[1]),
+                                    maxes[2]]);
         paths.data[1].vals.push([0, 0, 0, 0]);
-        
+        var ft = path.vals[0].time;
+        //var lt = path.vals[path.vals.length - 1].time;
+        //var t_interval = lt-ft;
         path.vals.forEach( function(v) {
             paths.data[0].vals.push([   v.lon - center[0], 
-                                        1,//v.ele - mins[2],
-                                        -(v.lat - center[1]) ]);
+                                        v.ele - mins[2],
+                                        -(v.lat - center[1]),
+                                        (v.time - ft)/max_inter*cube_h + maxes[2] ]);
             paths.data[1].vals.push(path.color);
         });
         paths.data[0].vals.push(paths.data[0].vals[paths.data[0].vals.length - 1]);
         paths.data[1].vals.push([0, 0, 0, 0]);
     });
+    
+    gl.useProgram(paths.sh);
     
     paths.data[0].loc   = gl.getAttribLocation(paths.sh, "position");
     gl.enableVertexAttribArray(paths.data[0].loc);
@@ -147,18 +164,39 @@ function update_shader() {
     gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[1].buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
     
+    
+    ///Create the cube path array for the cube_paths shader
+    gl.useProgram(cube_paths.sh);
+    
+    cube_paths.data[0].loc   = gl.getAttribLocation(cube_paths.sh, "position");
+    gl.enableVertexAttribArray(cube_paths.data[0].loc);
+    
+    cube_paths.data[0].buf     = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[0].buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[0].vals), gl.DYNAMIC_DRAW);
+    
+    cube_paths.data[1].loc   = gl.getAttribLocation(cube_paths.sh, "color");
+    gl.enableVertexAttribArray(cube_paths.data[1].loc);
+    
+    cube_paths.data[1].buf     = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[1].buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
+    
+    
+    ///Camera
     var z = Math.max(maxes[0]-center[0], Math.max(maxes[1]-center[1], maxes[2]-center[2]));
-    console.log(z);
     camera = new Camera(pos = [0, 0, 2*z]);
     camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 1, 1000000);
     
+    
+    ///Cube frame
     floor.data[0].vals      = o_floor_p(size = [(maxes[0]-mins[0]), (maxes[1]-mins[1])], pos = [0, - 1, 0]);
-    var cube_h = Math.min((maxes[0]-mins[0]), (maxes[1]-mins[1]))/2;
     cube.data[0].vals       = o_wire_cube_p(size = [(maxes[0]-mins[0]), cube_h, (maxes[1]-mins[1])], pos = [0, cube_h/2.0 + maxes[2], 0]);
     
+    
+    ///Floor
     floor.image.pic.crossOrigin = "anonymous";
     floor.shade.pic.crossOrigin = "anonymous";
-    
     floor.image.pic.src = 'http://129.206.228.72/cached/osm?LAYERS=osm_auto:all&SRS=EPSG:900913&FORMAT=image/png&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&BBOX='+mins[0]+','+mins[1]+','+maxes[0]+','+maxes[1]+'&WIDTH=1024&HEIGHT=1024';
     floor.shade.pic.src = 'http://129.206.228.72/cached/hillshade?LAYERS=europe_wms:hs_srtm_europa&SRS=EPSG:900913&FORMAT=image/png&TRANSPARENT=true&NUMZOOMLEVELS=19&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&BBOX='+mins[0]+','+mins[1]+','+maxes[0]+','+maxes[1]+'&WIDTH=1024&HEIGHT=1024'
     
@@ -172,6 +210,6 @@ function update_shader() {
         requestAnimationFrame(display);
     };
     
-    //var img = request_image(mins, maxes);
+    
     requestAnimationFrame(display);
 }

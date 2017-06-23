@@ -41,8 +41,8 @@ var floor_fragment_source = " \
     } \
 "
 
-var paths_vertex_source = " \
-    attribute vec3 position; \
+var floor_paths_vertex_source = " \
+    attribute vec4 position; \
     attribute vec4 color; \
     uniform mat4 PMatrix; \
     uniform mat4 MVMatrix; \
@@ -50,12 +50,12 @@ var paths_vertex_source = " \
     varying vec4 v_color; \
     \
     void main(void) { \
-        gl_Position = PMatrix * MVMatrix * vec4(position, 1.0); \
+        gl_Position = PMatrix * MVMatrix * vec4(position.x, 0, position.z, 1.0); \
         v_color = color; \
     } \
 "
 
-var paths_fragment_source = " \
+var floor_paths_fragment_source = " \
     precision highp float;\
     \
     varying vec4 v_color; \
@@ -80,6 +80,30 @@ var cube_fragment_source = " \
     \
     void main(void) { \
         gl_FragColor = vec4(0., 0., 0., 1.0);\
+    } \
+"
+
+var cube_paths_vertex_source = " \
+    attribute vec4 position; \
+    attribute vec4 color; \
+    uniform mat4 PMatrix; \
+    uniform mat4 MVMatrix; \
+    \
+    varying vec4 v_color; \
+    \
+    void main(void) { \
+        gl_Position = PMatrix * MVMatrix * vec4(position.x, position.w, position.z, 1.0); \
+        v_color = color; \
+    } \
+"
+
+var cube_paths_fragment_source = " \
+    precision highp float;\
+    \
+    varying vec4 v_color; \
+    \
+    void main(void) { \
+        gl_FragColor = v_color;\
     } \
 "
 

@@ -47,6 +47,9 @@
                 
                 var cube            = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null} ]}   //vertices
                 
+                var cube_paths      = {'sh': null, 'data': [{'vals': null, 'loc':null, 'buf': null},     // vertices
+                                                            {'vals': null, 'loc':null, 'buf': null}  ]}; // colors
+                
                 ///////////////////////////////////////////////////////////////////
                 // INIT FUNCS
                 
@@ -195,7 +198,7 @@
                         
                         gl.enableVertexAttribArray(paths.data[0].loc);
                         gl.bindBuffer(gl.ARRAY_BUFFER, paths.data[0].buf);
-                        gl.vertexAttribPointer(paths.data[0].loc, 3, gl.FLOAT, false, 0, 0);
+                        gl.vertexAttribPointer(paths.data[0].loc, 4, gl.FLOAT, false, 0, 0);
                         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[0].vals), gl.DYNAMIC_DRAW);
                         
                         gl.enableVertexAttribArray(paths.data[1].loc);
@@ -207,7 +210,7 @@
                                             camera.projection,
                                             m_lookAt(camera.pos, camera.vp, camera.up)  );
                         gl.lineWidth(3);
-                        gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/3);
+                        gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/4);
                     }
                     gl.enable(gl.DEPTH_TEST);
                     
@@ -225,6 +228,31 @@
                                         m_lookAt(camera.pos, camera.vp, camera.up)  );
                     gl.lineWidth(1);
                     gl.drawArrays(gl.LINE_STRIP, 0, cube.data[0].vals.length/3);
+                    
+                    
+                    /////////////////////////////////////////////////
+                    // CUBE PATHS
+                    gl.disable(gl.DEPTH_TEST);
+                    if (gps_paths.length) {
+                        gl.useProgram(cube_paths.sh);
+                        
+                        gl.enableVertexAttribArray(cube_paths.data[0].loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, cube_paths.data[0].buf);
+                        gl.vertexAttribPointer(cube_paths.data[0].loc, 4, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[0].vals), gl.DYNAMIC_DRAW);
+                        
+                        gl.enableVertexAttribArray(cube_paths.data[1].loc);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, cube_paths.data[1].buf);
+                        gl.vertexAttribPointer(cube_paths.data[1].loc, 4, gl.FLOAT, false, 0, 0);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(paths.data[1].vals), gl.DYNAMIC_DRAW);
+                        
+                        m_setMatrixUniforms(cube_paths.sh,
+                                            camera.projection,
+                                            m_lookAt(camera.pos, camera.vp, camera.up)  );
+                        gl.lineWidth(3);
+                        gl.drawArrays(gl.LINE_STRIP, 0, paths.data[0].vals.length/4);
+                    }
+                    gl.enable(gl.DEPTH_TEST);
                 }
                 
                 ///////////////////////////////////////////////////////////////////
@@ -263,7 +291,10 @@
                 
                 
                 // PATHS SHADER
-                paths.sh                = init_shader(gl, paths_fragment_source, paths_vertex_source)
+                paths.sh                = init_shader(gl, floor_paths_fragment_source, floor_paths_vertex_source)
+                
+                // CUBE PATHS SHADER
+                cube_paths.sh           = init_shader(gl, cube_paths_fragment_source, cube_paths_vertex_source)
                 
                 // CUBE SHADER
                 cube.sh                 = init_shader(gl, cube_fragment_source, cube_vertex_source)
@@ -278,7 +309,7 @@
                     gl.enable(gl.DEPTH_TEST);                               // Active le test de profondeur
                     gl.depthFunc(gl.LEQUAL);                                // Les objets proches cachent les objets lointains
                     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Efface les couleurs et le buffer de profondeur.
-                    gl.enable(gl.CULL_FACE);
+                    //gl.enable(gl.CULL_FACE);
                     gl.enable(gl.BLEND);
                     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     
