@@ -120,6 +120,7 @@ function update_shader() {
     
     console.log("nb paths:", gps_paths.length);
     console.log("total nb of points:", nb_vals);
+    
     var center = [  (maxes[0] + mins[0]) /2.0,
                     (maxes[1] + mins[1]) /2.0,
                     (maxes[2] + mins[2]) /2.0   ];
@@ -134,8 +135,6 @@ function update_shader() {
                                     maxes[2]]);
         paths.data[1].vals.push([0, 0, 0, 0]);
         var ft = path.vals[0].time;
-        //var lt = path.vals[path.vals.length - 1].time;
-        //var t_interval = lt-ft;
         path.vals.forEach( function(v) {
             paths.data[0].vals.push([   v.lon - center[0], 
                                         v.ele - mins[2],
@@ -187,9 +186,15 @@ function update_shader() {
     
     ///Camera
     var z = Math.max(maxes[0]-center[0], Math.max(maxes[1]-center[1], maxes[2]-center[2]));
-    camera = new Camera(pos = [0, 0, 2*z]);
-    camera.projection = m_perspective(45, gl.drawingBufferWidth/gl.drawingBufferHeight, 1, 1000000);
-    
+    camera.pos = [0, 0, 2*z];
+    camera.vp = [0, 0, 0];
+    camera.up = [0, 1, 0];
+    camera.near = 1;
+    camera.far  = 10000000;
+    camera.projection = m_perspective(camera.angle, 
+                        gl.drawingBufferWidth/gl.drawingBufferHeight, 
+                        camera.near, 
+                        camera.far);
     
     ///Cube frame
     floor.data[0].vals      = o_floor_p(size = [(maxes[0]-mins[0]), (maxes[1]-mins[1])], pos = [0, - 1, 0]);

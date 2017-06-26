@@ -31,7 +31,7 @@
                 var camera          = new Camera(pos = [0, 0, 3000]);
                 var mode            = "idle";
                 var mouse           = {x: 0,y: 0,dx: 0,dy:  0, dz: 0}; //posx, poy, dx, dy
-                var gps_paths           = [];
+                var gps_paths       = [];
                 var rot_angle       = [0, 0];
                 
                 //Shaders
@@ -65,8 +65,8 @@
                 
                 function init_webgL(_canvas) { 
                     
-                    _canvas.width = _canvas.clientWidth;
-                    _canvas.height = _canvas.clientHeight;
+                    _canvas.width = _canvas.parentElement.clientWidth;
+                    _canvas.height = _canvas.parentElement.clientHeight;
                     
                     try {
                         // Essaye de récupérer le contexte standard. En cas d'échec, il teste l'appel experimental
@@ -88,23 +88,31 @@
                     canvas.onmousedown = function (event) {
                         event.preventDefault();
                         if (event.button == 0) {
-                            mode = "rotation"
+                            mode = "rotation";
                             mouse.x = event.clientX;
                             mouse.y = event.clientY;
                             requestAnimationFrame(display);
                         }
                         else if (event.button == 2) {
-                            mode = "translation"
+                            mode = "translation";
                             mouse.x = event.clientX;
                             mouse.y = event.clientY;
                             requestAnimationFrame(display);
                         }
                     };
                     
-                    canvas.onmouseup = function () {
-                        mode = "idle"
-                        requestAnimationFrame(display);
+                    canvas.onmouseup = function (event) {
+                        mode = "idle";
                     };
+                    
+                    window.addEventListener("resize", function (event) {
+                        canvas.width = canvas.parentNode.clientWidth;
+                        canvas.height = canvas.parentNode.clientHeight;
+                        gl.viewport(0, 0, canvas.width, canvas.height);
+                        camera.projection = m_perspective(camera.angle, gl.drawingBufferWidth/gl.drawingBufferHeight, camera.near, camera.far);
+                        
+                        requestAnimationFrame(display);
+                    });
                     
                     canvas.onmousemove = function (event) {
                         if (mode == "rotation" || mode == "translation") {
@@ -116,7 +124,13 @@
                         }
                     }
                     
-                    camera.projection = m_perspective(45, _gl.drawingBufferWidth/_gl.drawingBufferHeight, 1, 10000);
+                    camera.angle = 45;
+                    camera.near = 1;
+                    camera.far = 10000;
+                    camera.projection = m_perspective(  camera.angle,
+                                                        _gl.drawingBufferWidth/_gl.drawingBufferHeight,
+                                                        camera.near,
+                                                        camera.far);
                     return _gl;
                 }
                 
@@ -257,7 +271,7 @@
                 
                 ///////////////////////////////////////////////////////////////////
                 // MAIN
-                
+                canvas.onload
                 gl                      = init_webgL(canvas);
                 
                 // FLOOR SHADER
@@ -277,8 +291,8 @@
                 
                 //texture
                 floor.image.texture = gl.createTexture();
-                floor.image.pic.onload = function() { handleTextureLoaded(floor.image.pic, floor.image.texture, 0); }
                 floor.image.pic.src = "img/sakura_flower.png";
+                floor.image.pic.onload = function() { handleTextureLoaded(floor.image.pic, floor.image.texture, 0); }
                 
                 floor.shade.texture = gl.createTexture();
                 floor.shade.pic.onload = function() { handleTextureLoaded(floor.shade.pic, floor.shade.texture, 1); }
